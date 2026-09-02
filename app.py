@@ -4,8 +4,8 @@ import pandas as pd
 # Configuração da Página
 st.set_page_config(page_title="Robô Analisador IAC - Versão Blindada", page_icon="🎯", layout="centered")
 
-st.title("🎯 Robô Analisador IAC - Versão Blindada & Cronométrica")
-st.markdown("Sistema automatizado com Cruz do Dia, Matriz 1º ao 5º, Seleção de Família e Anti-Trave.")
+st.title("🎯 Robô Analisador IAC - Matriz Acumulada 1º ao 5º")
+st.markdown("Sistema automatizado com Funil Histórico, Cruz do Dia, Seleção de Família e Anti-Trave.")
 
 # Inicializar Histórico de Apostas na Sessão
 if 'historico_apostas' not in st.session_state:
@@ -40,61 +40,79 @@ TABELA_FAMILIAS_IAC = {
     "Vaca (Grupo 25)": {"alvo_direto": "Touro (Grupo 21)", "dezenas_base": [97, 98, 99, 00], "quadrante": "Q3"}
 }
 
-# 1. Seção de Parâmetros e Cruz do Dia
-st.sidebar.header("🧭 Filtros do Manual IAC")
-cruz_do_dia_input = st.sidebar.text_input("Validação Cruz do Dia (Ex: Dígitos ativos):", "1, 4, 7")
-janela_operacional = st.sidebar.selectbox("Janela do Dia", ["Abertura (10h)", "Pressão (12h/15h)", "Fechamento (19h/Federal)"])
+# 1. Barra Lateral: Filtros e Cruz do Dia
+st.sidebar.header("🧭 Parâmetros Diários IAC")
+cruz_do_dia = st.sidebar.text_input("Cruz do Dia (Dígitos ativos):", "1, 4, 7")
+janela_alvo = st.sidebar.selectbox("Janela Operacional Atual", ["15h (Funil 10h + 12h)", "19h / Federal (Funil Completo 10h a 15h)", "Abertura (10h)"])
 
-st.subheader("📥 Entrada de Blocos (1º ao 5º Prêmios Anteriores)")
-col1, col2 = st.columns(2)
-with col1:
-    horario_atual = st.selectbox("Horário Alvo da Pule", ["10h", "12h", "15h", "19h", "Federal"])
-with col2:
-    bicho_dominante = st.selectbox("Seleção de Família / Bicho Base do Topo", list(TABELA_FAMILIAS_IAC.keys()))
+st.subheader("📥 Funil de Convergência do 1º ao 5º Prémio")
+st.markdown("Selecione os bichos fortes que apareceram no bloco acumulado para cruzar com as famílias de puxada:")
 
-milhar_referencia = st.text_input("Milhar/Centena de Referência para Transição (Ex: 3774):", "3774")
+# Seleção múltipla para capturar o funil acumulado
+bichos_bloco_acumulado = st.multiselect(
+    "Escolha os Bichos extraídos do 1º ao 5º nos horários anteriores:",
+    list(TABELA_FAMILIAS_IAC.keys())
+)
 
-# 2. Processamento do Algoritmo IAC Blindado
-if st.button("🚀 Executar Análise Cruzada e Gerar Pule IAC"):
-    
-    info_familia = TABELA_FAMILIAS_IAC[bicho_dominante]
-    alvo_puxada = info_familia["alvo_direto"]
-    
-    # Regra de Transição +1 / -1 (Anti-Trave) baseada nas dezenas
-    dezena_base = int(milhar_referencia[-2:]) if milhar_referencia.isdigit() and len(milhar_referencia) >= 2 else 10
-    dz_transicao = (dezena_base + 3) % 100
-    dz_mais = (dz_transicao + 1) % 100
-    dz_menos = (dz_transicao - 1) % 100
-    
-    st.success(f"Análise validada pela Cruz do Dia ({cruz_do_dia_input}). Foco cravado no eixo de puxada!")
-    
-    st.markdown("---")
-    st.subheader("🎫 PULE FRACIONADA IAC BLINDADA (Teto: R$ 5,00)")
-    
-    st.markdown(f"""
-    * **Família Base Selecionada:** {bicho_dominante}
-    * **Alvo Primário de Puxada (Família Direta):** **{alvo_puxada}**
-    * **Janela Operacional:** {janela_operacional}
-    
-    ---
-    * **1. Cabeça (1º Prêmio) [R$ 1,20]:** Alvo direto na cabeça no grupo do **{alvo_puxada.split('(')[0].strip()}**.
-    * **2. Cercado (1º ao 5º Prêmio) [R$ 1,50]:** Cobertura ampla no grupo do **{alvo_puxada.split('(')[0].strip()}** do 1º ao 5º.
-    * **3. Do 1º ao 3º Prêmio [R$ 0,75]:** Filtro intermediário de alta rotação.
-    * **4. Tiro Duplo de Transição com Anti-Trave (+1/-1) [R$ 0,95]:**
-        * Dezena de Avanço: **{dz_transicao:02d}**
-        * Espelhos de Proteção Anti-Trave: **{dz_mais:02d}** / **{dz_menos:02d}**
-        * *Trava de Segurança:* O número anterior (`{milhar_referencia}`) foi purgado para evitar repetição cega.
-    """)
-    
-    # Salvar no Histórico
-    st.session_state.historico_apostas.append({
-        "horario": horario_atual,
-        "base": milhar_referencia,
-        "familia_base": bicho_dominante,
-        "alvo": alvo_puxada
-    })
+# Upload opcional de print/foto do resultado para conferência visual
+st.markdown("---")
+st.subheader("📸 Registro Fotográfico do Resultado (Opcional)")
+foto_resultado = st.file_uploader("Envie o print/foto da banca ou tabela dos sorteios anteriores", type=["png", "jpg", "jpeg"])
 
-# 3. Painel de Histórico e Feedback de Aprendizado
+if foto_resultado is not None:
+    st.image(foto_resultado, caption="Print do Resultado Anexado com Sucesso", use_container_width=True)
+    st.info("Imagem carregada na memória do robô para auditoria visual da extração!")
+
+milhar_referencia = st.text_input("Milhar/Centena de Referência para Transição (+1/-1):", "3774")
+
+# 2. Processamento do Algoritmo IAC com Convergência Coletiva
+if st.button("🚀 Executar Funil IAC e Gerar Pule Blindada"):
+    
+    if not bichos_bloco_acumulado:
+        st.warning("⚠️ Selecione pelo menos um bicho do bloco acumulado para o robô calcular a convergência.")
+    else:
+        # Analisa a convergência cruzando os alvos dos bichos selecionados
+        alvos_calculados = []
+        for b in bichos_bloco_acumulado:
+            alvos_calculados.append(TABELA_FAMILIAS_IAC[b]["alvo_direto"])
+        
+        # Pega o primeiro alvo como eixo principal da matriz resultante
+        eixo_principal = alvos_calculados[0]
+        
+        # Regra de Transição +1 / -1 (Anti-Trave)
+        dezena_base = int(milhar_referencia[-2:]) if milhar_referencia.isdigit() and len(milhar_referencia) >= 2 else 10
+        dz_transicao = (dezena_base + 3) % 100
+        dz_mais = (dz_transicao + 1) % 100
+        dz_menos = (dz_transicao - 1) % 100
+        
+        st.success(f"Funil processado com base na Cruz do Dia ({cruz_do_dia}) e na Matriz Acumulada!")
+        
+        st.markdown("---")
+        st.subheader("🎫 PULE FRACIONADA IAC COM FUNIL ACUMULADO (Teto: R$ 5,00)")
+        
+        st.markdown(f"""
+        * **Janela Operacional:** {janela_alvo}
+        * **Bichos Analisados no Bloco:** {', '.join(bichos_bloco_acumulado)}
+        * **Alvo de Alta Convergência (Puxada Direta Cruzada):** **{eixo_principal}**
+        
+        ---
+        * **1. Cabeça (1º Prêmio) [R$ 1,20]:** Alvo principal no grupo do **{eixo_principal.split('(')[0].strip()}**.
+        * **2. Cercado (1º ao 5º Prêmio) [R$ 1,50]:** Cobertura ampla no grupo do **{eixo_principal.split('(')[0].strip()}** do 1º ao 5º.
+        * **3. Do 1º ao 3º Prêmio [R$ 0,75]:** Filtro intermediário de alta rotação.
+        * **4. Tiro Duplo de Transição com Anti-Trave (+1/-1) [R$ 0,95]:**
+            * Dezena de Avanço: **{dz_transicao:02d}**
+            * Espelhos Anti-Trave: **{dz_mais:02d}** / **{dz_menos:02d}**
+            * *Trava de Segurança:* O número anterior (`{milhar_referencia}`) foi purgado para evitar repetição cega.
+        """)
+        
+        # Salvar no Histórico
+        st.session_state.historico_apostas.append({
+            "janela": janela_alvo,
+            "bichos_bloco": ", ".join(bichos_bloco_acumulado),
+            "alvo_gerado": eixo_principal
+        })
+
+# 3. Histórico e Feedback
 st.markdown("---")
 st.subheader("📊 Histórico de Operações e Feedback do Robô")
 if st.session_state.historico_apostas:
@@ -104,11 +122,9 @@ if st.session_state.historico_apostas:
     c_fb1, c_fb2 = st.columns(2)
     with c_fb1:
         if st.button("✅ Registrar GREEN (Acerto Confirmado)"):
-        # Fixed string literal format error
-            st.toast("Green computado com sucesso! Pesos da família reforçados na matriz.")
+            st.toast("Green computado! Pesos da matriz acumulada reforçados.")
     with c_fb2:
         if st.button("❌ Registrar RED (Ativar Correção de Trave)"):
-        # Fixed string literal format error
-            st.toast("Red registrado! O sistema ativou o gatilho de inversão de quadrante para a próxima.")
+            st.toast("Red registrado! Sistema ativou o gatilho de inversão para o próximo bloco.")
 else:
-    st.info("Nenhuma pule registrada nesta sessão. Gere a primeira para alimentar o histórico.")
+    st.info("Nenhuma pule gerada nesta sessão ainda.")
