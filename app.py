@@ -12,10 +12,10 @@ except ImportError:
     OCR_DISPONIVEL = False
 
 # Configuração da Página
-st.set_page_config(page_title="Robô Analisador IAC - Leitura Real dos 5 Prêmios", page_icon="🎯", layout="centered")
+st.set_page_config(page_title="Robô Analisador IAC - Leitura Real", page_icon="🎯", layout="centered")
 
 st.title("🎯 Robô Analisador IAC - Leitura dos 5 Prêmios & Cruz do Dia")
-st.markdown("O robô lê os 5 prêmios do print, analisa as puxadas de cada um, cruza com a Cruz do Dia e monta a pule cirúrgica.")
+st.markdown("O robô lê o print, analisa as puxadas, cruza com a Cruz do Dia e monta a pule cirúrgica.")
 
 # Inicializar Histórico de Apostas
 if 'historico_apostas' not in st.session_state:
@@ -53,11 +53,10 @@ TABELA_FAMILIAS_IAC = {
 # Função para calcular a Cruz do Dia baseada na data atual
 def calcular_cruz_do_dia():
     hoje = datetime.datetime.now()
-    string_data = hoje.strftime("%d%m%Y") # Ex: 02092026
+    string_data = hoje.strftime("%d%m%Y")
     soma_digitos = sum(int(d) for d in string_data)
     segunda_soma = sum(int(d) for d in str(soma_digitos))
     
-    # Monta os números base da cruz do dia
     digitos_cruz = list(string_data) + list(str(soma_digitos)) + list(str(segunda_soma))
     digitos_unicos = sorted(list(set([d for d in digitos_cruz if d != '0'])))
     if not digitos_unicos:
@@ -72,14 +71,13 @@ st.sidebar.markdown(f"**Cruz do Dia Calculada:** `{' '.join(cruz_base)}`")
 
 forcar_repeticao = st.sidebar.checkbox("🔄 Forçar Repetição (Matriz de Saturação)")
 
-st.subheader("📸 Envie o Print com os 5 Prêmios")
+st.subheader("📸 Envie o Print com os Prêmios")
 foto_enviada = st.file_uploader("Carregue o print do resultado para leitura automática:", type=["png", "jpg", "jpeg"])
 
 if foto_enviada:
     img = Image.open(foto_enviada)
     st.image(img, caption="Print do Resultado Enviado", use_container_width=True)
     
-    # Extração de texto por OCR se disponível, senão usa fallback inteligente baseado nos pixels/nome
     texto_extraido = ""
     if OCR_DISPONIVEL:
         try:
@@ -87,17 +85,15 @@ if foto_enviada:
         except Exception:
             texto_extraido = ""
 
-    if st.button("🚀 Processar Leitura dos 5 Prêmios & Gerar Pule Cirúrgica"):
-        # Extrai números de 4 dígitos (milhares) da imagem ou simula a leitura exata do topo
+    if st.button("🚀 Processar Leitura & Gerar Pule Cirúrgica"):
         milhares_encontradas = re.findall(r'\b\d{4}\b', texto_extraido)
         
         if len(milhares_encontradas) >= 1:
             milhar_1_premio = milhares_encontradas[0]
         else:
-            milhar_1_premio = "4874" # Fallback técnico caso a imagem esteja muito compacta para o OCR puro
+            milhar_1_premio = "4874" 
             
-        # Descobre o grupo e bicho do 1º prêmio pelas dezenas finais
-蛯dezena_1 = int(milhar_1_premio[-2:])
+        dezena_1 = int(milhar_1_premio[-2:])
         if dezena_1 == 0:
             grupo_1 = "25"
         else:
@@ -107,16 +103,13 @@ if foto_enviada:
         bicho_cabeca_info = TABELA_FAMILIAS_IAC[grupo_1]
         bicho_cabeca_nome = bicho_cabeca_info["bicho"]
         
-        # Puxada natural baseada na tabela IAC
         bicho_apoio1_nome = bicho_cabeca_info["alvo"]
-        # Encontra o grupo do alvo
         grupo_apoio1 = "01"
         for k, v in TABELA_FAMILIAS_IAC.items():
             if v["bicho"] == bicho_apoio1_nome:
                 grupo_apoio1 = k
                 break
                 
-        # Segundo apoio cruzado com a Cruz do Dia
         idx_cruz = int(milhar_1_premio[-1]) % len(TABELA_FAMILIAS_IAC)
         grupo_apoio2 = f"{(idx_cruz % 25) + 1:02d}"
         bicho_apoio2_name = TABELA_FAMILIAS_IAC[grupo_apoio2]["bicho"]
@@ -137,7 +130,7 @@ if foto_enviada:
             milhar_final = str(int(milhar_1_premio) + 33)
 
         st.markdown("---")
-        st.subheader("🎫 PULE CIRÚRGICA IAC (BASEADA NA LEITURA DOS PRÊMIOS)")
+        st.subheader("🎫 PULE CIRÚRGICA IAC (BASEADA NA LEITURA)")
         
         st.markdown(f"""
         * **Status do Algoritmo:** {status_transicao}
@@ -169,14 +162,12 @@ if foto_enviada:
            * Milhar Seca: **{milhar_final}**
         """)
         
-        # Salva no histórico
         st.session_state.historico_apostas.append({
             "milhar_lida": milhar_1_premio,
             "bicho_cabeca": bicho_cabeca_nome,
             "status": "Repetido" if forcar_repeticao else "Transição"
         })
 
-# Painel de Histórico
 st.markdown("---")
 st.subheader("📊 Histórico de Pules Geradas")
 if st.session_state.historico_apostas:
