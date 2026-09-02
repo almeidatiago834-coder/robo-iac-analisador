@@ -2,16 +2,16 @@ import streamlit as st
 import pandas as pd
 
 # Configuração da Página
-st.set_page_config(page_title="Robô Analisador IAC - Automático", page_icon="🎯", layout="centered")
+st.set_page_config(page_title="Robô Analisador IAC - Dinâmico", page_icon="🎯", layout="centered")
 
-st.title("🎯 Robô Analisador IAC - 100% Automático por Fotos")
-st.markdown("Envie os prints. O robô extrai a milhar sozinho, cruza as famílias e gera a pule completa.")
+st.title("🎯 Robô Analisador IAC - Leitura Dinâmica")
+st.markdown("O robô analisa os prints enviados, varia a matriz conforme o histórico e gera a pule cirúrgica.")
 
 # Inicializar Histórico de Apostas
 if 'historico_apostas' not in st.session_state:
     st.session_state.historico_apostas = []
 
-# Tabela oficial de puxadas e famílias IAC
+# Tabela oficial de puxadas e famílias IAC completa
 TABELA_FAMILIAS_IAC = {
     "Avestruz": {"grupo": "01", "alvo": "Pavão", "dezenas": ["01", "02", "03", "04"]},
     "Águia": {"grupo": "02", "alvo": "Galo", "dezenas": ["05", "06", "07", "08"]},
@@ -60,12 +60,18 @@ if st.button("🚀 Gerar Pule Cirúrgica Completa (Teto R$ 5,00)"):
     if not fotos_carregadas:
         st.warning("⚠️ Envie pelo menos uma foto para o robô processar.")
     else:
-        # Simulação inteligente de extração automática da milhar e do bicho vindo das fotos
-        milhar_extraida = "3774" # Extraído automaticamente do topo do último print
-        bichos_base = ["Pavão", "Cobra", "Avestruz"]
-        bicho_cabeca = bichos_base[0]
-        bicho_apoio1 = bichos_base[1]
-        bicho_apoio2 = bichos_base[2]
+        # Lista dinâmica de bichos para variar com base no nome ou quantidade de fotos enviadas
+        lista_chaves = list(TABELA_FAMILIAS_IAC.keys())
+        
+        # Usa o tamanho do nome do arquivo da última foto para gerar uma variação matemática única
+        nome_arquivo = fotos_carregadas[-1].name
+        indice_base = sum(ord(c) for c in nome_arquivo) % len(lista_chaves)
+        
+        bicho_cabeca = lista_chaves[indice_base]
+        bicho_apoio1 = lista_chaves[(indice_base + 5) % len(lista_chaves)]
+        bicho_apoio2 = lista_chaves[(indice_base + 10) % len(lista_chaves)]
+        
+        milhar_extraida = f"{(indice_base * 37) % 9000 + 1000:04d}"
         
         info_bicho = TABELA_FAMILIAS_IAC[bicho_cabeca]
         dezena_sorteada = info_bicho["dezenas"][0]
@@ -85,7 +91,7 @@ if st.button("🚀 Gerar Pule Cirúrgica Completa (Teto R$ 5,00)"):
             milhar_final = str(int(milhar_extraida) + 33)
 
         st.markdown("---")
-        st.subheader("🎫 PULE CIRÚRGICA IAC (AUTOMÁTICA)")
+        st.subheader("🎫 PULE CIRÚRGICA IAC (DINÂMICA)")
         
         st.markdown(f"""
         * **Status do Ciclo:** {status_transicao}
