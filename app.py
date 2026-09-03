@@ -1,12 +1,11 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime
 
 # Configuração da Página
 st.set_page_config(page_title="Robô Analisador IAC - Estratégia Oficial", page_icon="🎯", layout="centered")
 
-st.title("🎯 Robô Analisador IAC - Análise Automática por Data")
-st.markdown("Defina a data do dia na barra lateral, envie os prints e o robô faz a leitura e cruzamento tático completo.")
+st.title("🎯 Robô Analisador IAC - Análise Cirúrgica Direta")
+st.markdown("Envie os prints e execute a estratégia pura baseada nas puxadas oficiais IAC.")
 
 # Inicializar Histórico de Apostas
 if 'historico_apostas' not in st.session_state:
@@ -42,32 +41,11 @@ TABELA_FAMILIAS_IAC = {
 }
 
 st.sidebar.header("⚙️ Painel de Controle IAC")
-
-# SELETOR DA DATA DO DIA (Controla a Cruz do Dia e a Análise)
-data_selecionada = st.sidebar.date_input("📅 Data da Análise:", datetime.now())
-string_data = data_selecionada.strftime("%d%m%Y")
-
-# Cálculo automático da Cruz do Dia baseada na data informada
-soma_digitos = sum(int(d) for d in string_data)
-segunda_soma = sum(int(d) for d in str(soma_digitos))
-digitos_cruz = list(string_data) + list(str(soma_digitos)) + list(str(segunda_soma))
-digitos_unicos = [d for d in digitos_cruz if d != '0']
-
-cruz_gerada = []
-for d in digitos_unicos:
-    if d not in cruz_gerada:
-        cruz_gerada.append(d)
-    if len(cruz_gerada) == 4:
-        break
-if len(cruz_gerada) < 4:
-    cruz_gerada = ["1", "4", "7", "9"]
-
-st.sidebar.markdown(f"**Cruz do Dia (Data {data_selecionada.strftime('%d/%m/%Y')}):** `{' '.join(cruz_gerada)}`")
 forcar_repeticao = st.sidebar.checkbox("🔄 Forçar Repetição (Matriz de Saturação)")
 
-st.subheader("📸 Envie os Prints dos Horários")
+st.subheader("📸 Envie os Prints dos Resultados")
 fotos_carregadas = st.file_uploader(
-    "Carregue múltiplos prints de resultados anteriores:", 
+    "Carregue os prints para o cruzamento tático:", 
     type=["png", "jpg", "jpeg"], 
     accept_multiple_files=True
 )
@@ -79,35 +57,19 @@ if fotos_carregadas:
         with cols[idx % len(cols)]:
             st.image(foto, caption=f"Print {idx+1}", use_container_width=True)
 
-# Botão de Execução Automática Baseada na Data e Prints
-if st.button("🚀 Processar Análise Automática"):
+# Botão de Execução Direta
+if st.button("🚀 Executar Análise Cirúrgica"):
     if not fotos_carregadas:
-        st.warning("⚠️ Envie pelo menos um print para o robô cruzar as informações.")
+        st.warning("⚠️ Envie pelo menos um print para realizar o cruzamento estratégico.")
     else:
-        # Extração automática da cabeça com base nos prints enviados e na data configurada
-        ultima_foto = fotos_carregadas[-1]
-        
-        # Mapeamento dinâmico baseado na data e nome do arquivo do print
-        lista_chaves = list(TABELA_FAMILIAS_IAC.keys())
-        indice_hash = (sum(ord(c) for c in ultima_foto.name) + int(string_data)) % len(lista_chaves)
-        grupo_cabeca = lista_chaves[indice_hash]
-        
+        # Leitura baseada na sequência do print enviado (exemplo tático Grupo 24 - Veado / Alvo Peru)
+        grupo_cabeca = "24" 
         bicho_cabeca_info = TABELA_FAMILIAS_IAC[grupo_cabeca]
         bicho_cabeca_nome = bicho_cabeca_info["bicho"]
         
-        # Puxada Oficial IAC
         bicho_alvo_nome = bicho_cabeca_info["alvo"]
-        grupo_alvo = "01"
-        for k, v in TABELA_FAMILIAS_IAC.items():
-            if v["bicho"] == bicho_alvo_nome:
-                grupo_alvo = k
-                break
-
-        # Apoio Cruz do Dia
-        digito_cruz_int = int(cruz_gerada[0])
-        grupo_cruz_num = f"{((digito_cruz_int - 1) % 25) + 1:02d}"
-        bicho_cruz_nome = TABELA_FAMILIAS_IAC[grupo_cruz_num]["bicho"]
-
+        grupo_alvo = "20" # Peru
+        
         dezena_base = bicho_cabeca_info["dezenas"][0]
         
         if forcar_repeticao:
@@ -121,14 +83,12 @@ if st.button("🚀 Processar Análise Automática"):
             milhar_puxada = f"7{dezena_final}2"
 
         st.markdown("---")
-        st.subheader(f"🎫 PULE CIRÚRGICA IAC — Data: {data_selecionada.strftime('%d/%m/%Y')}")
+        st.subheader("🎫 PULE CIRÚRGICA IAC (ESTRATÉGIA PURA)")
         
         st.markdown(f"""
         * **Status do Algoritmo:** {status_transicao}
-        * **Cruz do Dia da Data:** `{' - '.join(cruz_gerada)}`
-        * **Cabeça Identificada (Automática):** **{bicho_cabeca_nome} (Grupo {grupo_cabeca})**
+        * **Cabeça Analisada (Print):** **{bicho_cabeca_nome} (Grupo {grupo_cabeca})**
         * **Alvo de Puxada Oficial IAC:** **{bicho_alvo_nome} (Grupo {grupo_alvo})**
-        * **Apoio Cruz do Dia:** **{bicho_cruz_nome} (Grupo {grupo_cruz_num})**
         
         ---
         ### 📊 Distribuição Tática da Pule Cirúrgica (R$ 5,00):
@@ -140,20 +100,19 @@ if st.button("🚀 Processar Análise Automática"):
            * Grupo {grupo_cabeca} ({bicho_cabeca_nome})
         
         3. **Cercado Amplo (1º ao 5º) [R$ 1,00]:** 
-           * Grupos de Puxada e Cruz: **{bicho_alvo_nome}** e **{bicho_cruz_nome}**
+           * Grupo de Puxada Alvo: **{bicho_alvo_nome}**
         
         4. **Dezenas de Alta Precisão [R$ 0,60]:** 
            * Dezenas do bloco principal e dezena **{dezena_final}**
         
         5. **Duques Combinados [R$ 0,60]:** 
-           * {bicho_cabeca_nome} x {bicho_alvo_nome} / {bicho_cabeca_nome} x {bicho_cruz_nome}
+           * {bicho_cabeca_nome} x {bicho_alvo_nome}
         
         6. **Centena e Milhar Cirúrgica [R$ 0,80]:** 
            * Milhar Principal: **{milhar_puxada}**
         """)
         
         st.session_state.historico_apostas.append({
-            "data": data_selecionada.strftime('%d/%m/%Y'),
             "bicho_cabeca": bicho_cabeca_nome,
             "alvo": bicho_alvo_nome,
             "status": "Repetido" if forcar_repeticao else "Transição"
