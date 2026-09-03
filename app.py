@@ -2,16 +2,16 @@ import streamlit as st
 import pandas as pd
 
 # Configuração da Página
-st.set_page_config(page_title="Robô Analisador IAC - Motor de Eco Potencializado", page_icon="🎯", layout="centered")
+st.set_page_config(page_title="Robô Analisador IAC - Motor Completo", page_icon="🎯", layout="centered")
 
-st.title("🎯 Robô Analisador IAC - Foco Absoluto no Eco & Espelhamento")
-st.markdown("Motor refinado: Potencializando o padrão de eco que está cravando os resultados.")
+st.title("🎯 Robô Analisador IAC - Motor Completo (Eco + IAC + +1/-1 + Inversão)")
+st.markdown("Estratégia híbrida acoplada: Eco, Inversão, Margem +1/-1 e Espelhamento.")
 
 # Inicializar Histórico
 if 'historico_apostas' not in st.session_state:
     st.session_state.historico_apostas = []
 
-# Dicionário de Grupos e Dezenas Oficiais do Jogo do Bicho
+# Tabela de Grupos e Dezenas Oficiais
 def obter_dados_por_dezena(dezena_str):
     d = int(dezena_str) % 100
     g = ((d - 1) // 4) + 1 if d != 0 else 25
@@ -67,7 +67,7 @@ with col4:
     u1_4 = st.text_input("4º Prémio:", value="1189", key="u1_4")
     u1_5 = st.text_input("5º Prémio (Elástico):", value="6640", key="u1_5")
 
-if st.button("🚀 Processar com Motor de Eco Refinado"):
+if st.button("🚀 Processar Estratégia Híbrida (IAC + Eco + Margem)"):
     try:
         nums_penultimo = [p1_1, p1_2, p1_3, p1_4, p1_5]
         nums_ultimo = [u1_1, u1_2, u1_3, u1_4, u1_5]
@@ -85,37 +85,46 @@ if st.button("🚀 Processar com Motor de Eco Refinado"):
                 for dz in dez_lista:
                     dezenas_bloqueadas.add(dz)
 
-        # MOTOR FOCADO NO ECO E ESPELHAMENTO MATEMÁTICO
         candidatos_pontuados = {}
 
+        # 1. PROCESSAMENTO DO PENÚLTIMO HORÁRIO (Tendência IAC de Fundo)
+        for idx, n in enumerate(nums_penultimo):
+            n_limpo = "".join(filter(str.isdigit, n))
+            if len(n_limpo) >= 2:
+                dz = int(n_limpo[-2:])
+                g_base, _, _ = obter_dados_por_dezena(f"{dz:02d}")
+                # O IAC cruza a progressão de grupo anterior
+                g_iac = (g_base % 25) + 1
+                if g_iac not in grupos_bloqueados:
+                    candidatos_pontuados[g_iac] = candidatos_pontuados.get(g_iac, 0) + 1
+
+        # 2. PROCESSAMENTO DO ÚLTIMO HORÁRIO (Eco, Inversão, Margem +1/-1 e Espelho)
         for idx, n in enumerate(nums_ultimo):
             n_limpo = "".join(filter(str.isdigit, n))
             if len(n_limpo) >= 2:
                 dz_atual = int(n_limpo[-2:])
                 
-                # O Padrão de Eco Principal que está cravando:
-                # Variações simétricas de eco decimal (+11, -11, +22, -22) e inversões limpas
-                ecos = [
-                    (dz_atual + 11) % 100,
-                    (dz_atual - 11) % 100,
-                    (dz_atual + 22) % 100,
-                    (dz_atual - 22) % 100,
-                    (dz_atual + 9) % 100,   # Eco cruzado de terminação
-                    (dz_atual - 9) % 100,
-                    ((dz_atual % 10) * 10 + (dz_atual // 10)) % 100 # Inversão pura
+                # Camadas da Estratégia:
+                operacoes = [
+                    (dz_atual + 11) % 100,  # Eco Principal (+11)
+                    (dz_atual - 11) % 100,  # Eco Principal (-11)
+                    (dz_atual + 1) % 100,   # Margem +1
+                    (dz_atual - 1) % 100,   # Margem -1
+                    ((dz_atual % 10) * 10 + (dz_atual // 10)) % 100, # Inversão Pura
+                    (99 - dz_atual) % 100   # Espelho / Termômetro
                 ]
                 
-                # Peso maior para a cabeça (idx 0) e para o 5º prêmio (elasticidade do eco)
+                # Peso forte para a Cabeça (idx 0) e 5º prêmio (Elástico)
                 peso = 5 if idx == 0 else (4 if idx == 4 else 2)
 
-                for eco in ecos:
-                    eco_str = f"{eco:02d}"
-                    g_cand, _, _ = obter_dados_por_dezena(eco_str)
+                for op in operacoes:
+                    op_str = f"{op:02d}"
+                    g_cand, _, _ = obter_dados_por_dezena(op_str)
                     
                     if g_cand not in grupos_bloqueados:
                         candidatos_pontuados[g_cand] = candidatos_pontuados.get(g_cand, 0) + peso
 
-        # Ordena os grupos com base na pontuação de eco
+        # Ordenação dos candidatos por pontuação combinada
         grupos_ordenados = sorted(candidatos_pontuados.keys(), key=lambda x: candidatos_pontuados[x], reverse=True)
 
         fallback_g = 1
@@ -131,21 +140,21 @@ if st.button("🚀 Processar com Motor de Eco Refinado"):
         _, b3, dez3 = obter_dados_por_dezena(f"{g3*4}")
 
         st.markdown("---")
-        st.subheader("🎫 PULE DE OURO — MATRIZ DE ECO REFINADA")
+        st.subheader("🎫 PULE DE OURO — MATRIZ HÍBRIDA COMPLETA")
         
         st.markdown(f"""
-        * **Filtro Ativo:** {len(grupos_bloqueados)} grupos eliminados da base anterior.
+        * **Filtro de Exclusão:** {len(grupos_bloqueados)} grupos banidos por já terem saído.
         
         ---
-        ### 📊 Alvos Validados pelo Padrão de Eco:
+        ### 📊 Alvos Validados pelo Motor Híbrido:
         
-        1. **1º Alvo Principal (Eco Direto de Alta Precisão) [R$ 1,50]:**
+        1. **1º Alvo Principal (Eco + Inversão Direta) [R$ 1,50]:**
            * **{b1}** (Grupo {g1:02d}) | Dezenas: `{', '.join(dez1)}`
         
-        2. **2º Alvo de Eco Simétrico [R$ 1,50]:**
+        2. **2º Alvo de Margem (+1 / -1) & Espelho [R$ 1,50]:**
            * **{b2}** (Grupo {g2:02d}) | Dezenas: `{', '.join(dez2)}`
         
-        3. **3º Alvo de Fechamento Elástico [R$ 1,00]:**
+        3. **3º Alvo de Fechamento Elástico IAC [R$ 1,00]:**
            * **{b3}** (Grupo {g3:02d}) | Dezenas: `{', '.join(dez3)}`
         
         4. **Duques e Terno Combinados:**
@@ -153,14 +162,14 @@ if st.button("🚀 Processar com Motor de Eco Refinado"):
         """)
 
         st.session_state.historico_apostas.append({
-            "status": "Eco Processado",
+            "status": "Híbrido Processado",
             "alvos": f"{b1}, {b2}, {b3}"
         })
 
     except Exception as e:
-        st.error(f"Erro ao calcular o eco: {e}")
+        st.error(f"Erro no processamento da estratégia: {e}")
 
 st.markdown("---")
-st.subheader("📊 Histórico de Tiros com Eco")
+st.subheader("📊 Histórico de Tiros Híbridos")
 if st.session_state.historico_apostas:
     st.dataframe(pd.DataFrame(st.session_state.historico_apostas))
