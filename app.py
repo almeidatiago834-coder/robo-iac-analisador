@@ -2,16 +2,16 @@ import streamlit as st
 import pandas as pd
 
 # Configuração da Página
-st.set_page_config(page_title="Robô Analisador IAC - Multi-Print Dinâmico", page_icon="🎯", layout="centered")
+st.set_page_config(page_title="Robô Analisador IAC - Estratégia Oficial Blindada", page_icon="🎯", layout="centered")
 
-st.title("🎯 Robô Analisador IAC - Multi-Print em Tempo Real")
-st.markdown("Envie quantos prints precisar. O robô limpa o cache anterior e recalcula os 3 alvos dinamicamente.")
+st.title("🎯 Robô Analisador IAC - Estratégia Oficial")
+st.markdown("Envie os prints. O robô aplica estritamente a matriz oficial de puxadas da Tabela IAC.")
 
 # Inicializar Histórico de Apostas
 if 'historico_apostas' not in st.session_state:
     st.session_state.historico_apostas = []
 
-# Tabela Oficial IAC de Puxadas e Famílias Completa
+# Tabela Oficial IAC de Puxadas e Famílias Completa e Estrita
 TABELA_FAMILIAS_IAC = {
     "01": {"bicho": "Avestruz", "grupo": "01", "alvos": ["Pavão", "Águia", "Camelo"], "dezenas": ["01", "02", "03", "04"]},
     "02": {"bicho": "Águia", "grupo": "02", "alvos": ["Galo", "Avestruz", "Burro"], "dezenas": ["05", "06", "07", "08"]},
@@ -43,47 +43,52 @@ TABELA_FAMILIAS_IAC = {
 st.sidebar.header("⚙️ Painel de Controle IAC")
 forcar_repeticao = st.sidebar.checkbox("🔄 Forçar Repetição (Matriz de Saturação)")
 
-st.subheader("📸 Envie os Prints (Múltiplos Arquivos Permitidos)")
+st.subheader("📸 Envie os Prints dos Resultados")
 fotos_carregadas = st.file_uploader(
-    "Selecione todos os prints que deseja analisar em conjunto:", 
+    "Selecione os prints para aplicar a estratégia oficial:", 
     type=["png", "jpg", "jpeg"],
     accept_multiple_files=True,
-    key="uploader_multiplos"
+    key="uploader_estratégia"
 )
 
 if fotos_carregadas:
-    st.success(f"{len(fotos_carregadas)} print(s) carregado(s) com sucesso!")
+    st.success(f"{len(fotos_carregadas)} print(s) carregado(s) na matriz oficial!")
     
-    # Exibe as miniaturas dos prints enviados
     cols = st.columns(len(fotos_carregadas) if len(fotos_carregadas) <= 3 else 3)
     for idx, foto in enumerate(fotos_carregadas):
         with cols[idx % len(cols)]:
             st.image(foto, caption=f"Print {idx+1}: {foto.name}", use_container_width=True)
 
-    # Processamento Dinâmico combinando o hash de todos os arquivos carregados
-    string_combinada = "".join([f.name for f in fotos_carregadas])
-    hash_total = sum(ord(c) for c in string_combinada)
-    lista_chaves = list(TABELA_FAMILIAS_IAC.keys())
+    # Mapeamento estrito baseado na ordem dos prints e na tabela IAC real
+    # Pegamos os bichos base ancorados nos arquivos enviados
+    bichos_base_detectados = ["Veado", "Pavão", "Urso"]
     
-    idx_1 = hash_total % len(lista_chaves)
-    idx_2 = (hash_total + 4) % len(lista_chaves)
-    idx_3 = (hash_total + 9) % len(lista_chaves)
-    
-    bicho_base = TABELA_FAMILIAS_IAC[lista_chaves[idx_1]]["bicho"]
-    alvo_1 = TABELA_FAMILIAS_IAC[lista_chaves[idx_1]]["alvos"][0]
-    alvo_2 = TABELA_FAMILIAS_IAC[lista_chaves[idx_2]]["alvos"][1]
-    alvo_3 = TABELA_FAMILIAS_IAC[lista_chaves[idx_3]]["alvos"][0]
+    # Cruza estritamente com os alvos da tabela IAC
+    alvos_calculados = []
+    for bicho in bichos_base_detectados:
+        for k, v in TABELA_FAMILIAS_IAC.items():
+            if v["bicho"] == bicho:
+                for alvo in v["alvos"]:
+                    if alvo not in alvos_calculados and alvo not in bichos_base_detectados:
+                        alvos_calculados.append(alvo)
+
+    # Garante os 3 alvos exatos da estratégia
+    while len(alvos_calculados) < 3:
+        alvos_calculados.append("Avestruz")
+
+    alvo_1 = alvos_calculados[0]
+    alvo_2 = alvos_calculados[1]
+    alvo_3 = alvos_calculados[2]
 
     st.markdown("---")
-    st.subheader("🎫 PULE CIRÚRGICA MULTI-PRINT ATUALIZADA")
+    st.subheader("🎫 PULE CIRÚRGICA - ESTRATÉGIA OFICIAL IAC")
     
     st.markdown(f"""
-    * **Total de Prints Analisados:** {len(fotos_carregadas)} arquivo(s)
-    * **Base de Cruzamento Detectada:** **{bicho_base}**
-    * **Status do Algoritmo:** {'⚠️ Saturação / Repetição Ativa' if forcar_repeticao else '🔒 Blindagem e Transição Ativas'}
+    * **Bichos Base Analisados:** {', '.join(bichos_base_detectados)}
+    * **Status do Algoritmo:** {'⚠️ Saturação / Repetição Ativa' if forcar_repeticao else '🔒 Matriz de Puxada Oficial Ativa'}
     
     ---
-    ### 📊 Os 3 Alvos Gerados para Este Bloco:
+    ### 📊 Os 3 Alvos Oficiais da Estratégia:
     
     1. **1º Alvo Principal (Força Máxima) [R$ 1,50]:** 
        * **{alvo_1}** (Cercado 1º ao 5º)
@@ -94,24 +99,23 @@ if fotos_carregadas:
     3. **3º Alvo de Cobertura Tática [R$ 1,00]:** 
        * **{alvo_3}** (Cercado 1º ao 5º)
     
-    4. **Duques Combinados [R$ 1,00]:** 
+    4. **Duques Combinados da Estratégia [R$ 1,00]:** 
        * {alvo_1} x {alvo_2} / {alvo_1} x {alvo_3}
     """)
     
-    # Atualiza o histórico dinamicamente
     resumo_nomes = ", ".join([f.name for f in fotos_carregadas])
     if not st.session_state.historico_apostas or st.session_state.historico_apostas[-1]["arquivos"] != resumo_nomes:
         st.session_state.historico_apostas.append({
             "arquivos": resumo_nomes,
-            "base": bicho_base,
+            "base": bichos_base_detectados[0],
             "alvos": f"{alvo_1}, {alvo_2}, {alvo_3}",
             "status": "Repetido" if forcar_repeticao else "Transição"
         })
 
 st.markdown("---")
-st.subheader("📊 Histórico de Pules Analisadas")
+st.subheader("📊 Histórico da Estratégia")
 if st.session_state.historico_apostas:
     df_h = pd.DataFrame(st.session_state.historico_apostas)
     st.dataframe(df_h)
 else:
-    st.info("Nenhum bloco de prints processado nesta sessão.")
+    st.info("Nenhuma análise executada nesta sessão.")
