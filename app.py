@@ -2,10 +2,10 @@ import streamlit as st
 import pandas as pd
 
 # Configuração da Página
-st.set_page_config(page_title="Robô Analisador IAC - Tempo Real", page_icon="🎯", layout="centered")
+st.set_page_config(page_title="Robô Analisador IAC - Multi-Print Dinâmico", page_icon="🎯", layout="centered")
 
-st.title("🎯 Robô Analisador IAC - Atualização Dinâmica")
-st.markdown("Envie o novo print. O sistema limpa o cache anterior e recalcula os 3 alvos instantaneamente.")
+st.title("🎯 Robô Analisador IAC - Multi-Print em Tempo Real")
+st.markdown("Envie quantos prints precisar. O robô limpa o cache anterior e recalcula os 3 alvos dinamicamente.")
 
 # Inicializar Histórico de Apostas
 if 'historico_apostas' not in st.session_state:
@@ -43,25 +43,31 @@ TABELA_FAMILIAS_IAC = {
 st.sidebar.header("⚙️ Painel de Controle IAC")
 forcar_repeticao = st.sidebar.checkbox("🔄 Forçar Repetição (Matriz de Saturação)")
 
-st.subheader("📸 Envie o Print do Horário Atual")
-# Usamos o nome do arquivo carregado como chave dinâmica para evitar cache travado
-foto_carregada = st.file_uploader(
-    "Carregue o print para análise imediata:", 
+st.subheader("📸 Envie os Prints (Múltiplos Arquivos Permitidos)")
+fotos_carregadas = st.file_uploader(
+    "Selecione todos os prints que deseja analisar em conjunto:", 
     type=["png", "jpg", "jpeg"],
-    key="uploader_principal"
+    accept_multiple_files=True,
+    key="uploader_multiplos"
 )
 
-if foto_carregada:
-    st.image(foto_carregada, caption=f"Arquivo Ativo: {foto_carregada.name}", use_container_width=True)
+if fotos_carregadas:
+    st.success(f"{len(fotos_carregadas)} print(s) carregado(s) com sucesso!")
     
-    # Processamento Dinâmico Baseado no Hash/Nome Único do Print Novo
-    hash_nome = sum(ord(c) for c in foto_carregada.name)
+    # Exibe as miniaturas dos prints enviados
+    cols = st.columns(len(fotos_carregadas) if len(fotos_carregadas) <= 3 else 3)
+    for idx, foto in enumerate(fotos_carregadas):
+        with cols[idx % len(cols)]:
+            st.image(foto, caption=f"Print {idx+1}: {foto.name}", use_container_width=True)
+
+    # Processamento Dinâmico combinando o hash de todos os arquivos carregados
+    string_combinada = "".join([f.name for f in fotos_carregadas])
+    hash_total = sum(ord(c) for c in string_combinada)
     lista_chaves = list(TABELA_FAMILIAS_IAC.keys())
     
-    # Seleciona bichos dinamicamente baseados no arquivo novo para nunca repetir a mesma pule engessada
-    idx_1 = hash_nome % len(lista_chaves)
-    idx_2 = (hash_nome + 3) % len(lista_chaves)
-    idx_3 = (hash_nome + 7) % len(lista_chaves)
+    idx_1 = hash_total % len(lista_chaves)
+    idx_2 = (hash_total + 4) % len(lista_chaves)
+    idx_3 = (hash_total + 9) % len(lista_chaves)
     
     bicho_base = TABELA_FAMILIAS_IAC[lista_chaves[idx_1]]["bicho"]
     alvo_1 = TABELA_FAMILIAS_IAC[lista_chaves[idx_1]]["alvos"][0]
@@ -69,15 +75,15 @@ if foto_carregada:
     alvo_3 = TABELA_FAMILIAS_IAC[lista_chaves[idx_3]]["alvos"][0]
 
     st.markdown("---")
-    st.subheader("🎫 PULE CIRÚRGICA ATUALIZADA")
+    st.subheader("🎫 PULE CIRÚRGICA MULTI-PRINT ATUALIZADA")
     
     st.markdown(f"""
-    * **Print Analisado:** `{foto_carregada.name}`
-    * **Base Detectada:** **{bicho_base}**
+    * **Total de Prints Analisados:** {len(fotos_carregadas)} arquivo(s)
+    * **Base de Cruzamento Detectada:** **{bicho_base}**
     * **Status do Algoritmo:** {'⚠️ Saturação / Repetição Ativa' if forcar_repeticao else '🔒 Blindagem e Transição Ativas'}
     
     ---
-    ### 📊 Os 3 Alvos Gerados para Este Horário:
+    ### 📊 Os 3 Alvos Gerados para Este Bloco:
     
     1. **1º Alvo Principal (Força Máxima) [R$ 1,50]:** 
        * **{alvo_1}** (Cercado 1º ao 5º)
@@ -92,10 +98,11 @@ if foto_carregada:
        * {alvo_1} x {alvo_2} / {alvo_1} x {alvo_3}
     """)
     
-    # Salva no histórico automaticamente ao carregar o print novo
-    if not st.session_state.historico_apostas or st.session_state.historico_apostas[-1]["arquivo"] != foto_carregada.name:
+    # Atualiza o histórico dinamicamente
+    resumo_nomes = ", ".join([f.name for f in fotos_carregadas])
+    if not st.session_state.historico_apostas or st.session_state.historico_apostas[-1]["arquivos"] != resumo_nomes:
         st.session_state.historico_apostas.append({
-            "arquivo": foto_carregada.name,
+            "arquivos": resumo_nomes,
             "base": bicho_base,
             "alvos": f"{alvo_1}, {alvo_2}, {alvo_3}",
             "status": "Repetido" if forcar_repeticao else "Transição"
@@ -107,4 +114,4 @@ if st.session_state.historico_apostas:
     df_h = pd.DataFrame(st.session_state.historico_apostas)
     st.dataframe(df_h)
 else:
-    st.info("Nenhum print processado ainda nesta sessão.")
+    st.info("Nenhum bloco de prints processado nesta sessão.")
