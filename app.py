@@ -106,7 +106,7 @@ if fotos_carregadas:
 
     # Funil final para garantir exatamente os 3 melhores alvos filtrados de ruído
     while len(alvos_candidatos) < 3:
-        alvos_candidatos.append("")
+        alvos_candidatos.append("bicho")
 
     alvo_1 = alvos_candidatos[0]
     alvo_2 = alvos_candidatos[1]
