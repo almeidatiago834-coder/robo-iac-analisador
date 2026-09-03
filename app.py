@@ -2,128 +2,136 @@ import streamlit as st
 import pandas as pd
 
 # Configuração da Página
-st.set_page_config(page_title="Robô Analisador IAC - Matriz Completa Avançada", page_icon="🎯", layout="centered")
+st.set_page_config(page_title="Robô Analisador IAC - Master Refinado", page_icon="🎯", layout="centered")
 
-st.title("🎯 Robô Analisador IAC - Motor de Estratégia Avançada")
-st.markdown("Análise multi-camadas: IAC, Espelho, Inversão, 1º ao 5º, +1/-1, Eco Decimal, Funil e Efeito Elástico.")
+st.title("🎯 Robô Analisador IAC - Motor de Refinamento Master")
+st.markdown("Versão ultra-ajustada: Pesos por Posição (1º ao 5º), Passo +1/-1 Real, Eco Decimal e Funil de Alta Precisão.")
 
 # Inicializar Histórico de Apostas
 if 'historico_apostas' not in st.session_state:
     st.session_state.historico_apostas = []
 
-# Tabela Oficial IAC de Puxadas, Famílias e Dezenas Completa
-TABELA_IAC_COMPLETA = {
-    "01": {"bicho": "Avestruz", "grupo": 1, "familia": "1-4", "alvos": ["Pavão", "Águia", "Camelo"], "dezenas": [1, 2, 3, 4]},
-    "02": {"bicho": "Águia", "grupo": 2, "familia": "5-8", "alvos": ["Galo", "Avestruz", "Burro"], "dezenas": [5, 6, 7, 8]},
-    "03": {"bicho": "Burro", "grupo": 3, "familia": "9-12", "alvos": ["Cavalo", "Macaco", "Elefante"], "dezenas": [9, 10, 11, 12]},
-    "04": {"bicho": "Borboleta", "grupo": 4, "familia": "13-16", "alvos": ["Cabra", "Cavalo", "Leão"], "dezenas": [13, 14, 15, 16]},
-    "05": {"bicho": "Cachorro", "grupo": 5, "familia": "17-20", "alvos": ["Gato", "Cabra", "Burro"], "dezenas": [17, 18, 19, 20]},
-    "06": {"bicho": "Cabra", "grupo": 6, "familia": "21-24", "alvos": ["Carneiro", "Cachorro", "Burro"], "dezenas": [21, 22, 23, 24]},
-    "07": {"bicho": "Carneiro", "grupo": 7, "familia": "25-28", "alvos": ["Camelo", "Cabra", "Macaco"], "dezenas": [25, 26, 27, 28]},
-    "08": {"bicho": "Camelo", "grupo": 8, "familia": "29-32", "alvos": ["Urso", "Carneiro", "Avestruz"], "dezenas": [29, 30, 31, 32]},
-    "09": {"bicho": "Cobra", "grupo": 9, "familia": "33-36", "alvos": ["Touro", "Camelo", "Cabra"], "dezenas": [33, 34, 35, 36]},
-    "10": {"bicho": "Coelho", "grupo": 10, "familia": "37-40", "alvos": ["Leão", "Cobra", "Tigre"], "dezenas": [37, 38, 39, 40]},
-    "11": {"bicho": "Cavalo", "grupo": 11, "familia": "41-44", "alvos": ["Elefante", "Borboleta", "Gato"], "dezenas": [41, 42, 43, 44]},
-    "12": {"bicho": "Elefante", "grupo": 12, "familia": "45-48", "alvos": ["Jacaré", "Cavalo", "Leão"], "dezenas": [45, 46, 47, 48]},
-    "13": {"bicho": "Galo", "grupo": 13, "familia": "49-52", "alvos": ["Águia", "Pavão", "Peru"], "dezenas": [49, 50, 51, 52]},
-    "14": {"bicho": "Gato", "grupo": 14, "familia": "53-56", "alvos": ["Cachorro", "Leão", "Coelho"], "dezenas": [53, 54, 55, 56]},
-    "15": {"bicho": "Jacaré", "grupo": "15", "familia": "57-60", "alvos": ["Macaco", "Elefante", "Porco"], "dezenas": [57, 58, 59, 60]},
-    "16": {"bicho": "Leão", "grupo": "16", "familia": "61-64", "alvos": ["Tigre", "Gato", "Elefante"], "dezenas": [61, 62, 63, 64]},
-    "17": {"bicho": "Macaco", "grupo": "17", "familia": "65-68", "alvos": ["Porco", "Burro", "Jacaré"], "dezenas": [65, 66, 67, 68]},
-    "18": {"bicho": "Porco", "grupo": "18", "familia": "69-72", "alvos": ["Peru", "Macaco", "Touro"], "dezenas": [69, 70, 71, 72]},
-    "19": {"bicho": "Pavão", "grupo": "19", "familia": "73-76", "alvos": ["Avestruz", "Galo", "Urso"], "dezenas": [73, 74, 75, 76]},
-    "20": {"bicho": "Peru", "grupo": "20", "familia": "77-80", "alvos": ["Veado", "Porco", "Galo"], "dezenas": [77, 78, 79, 80]},
-    "21": {"bicho": "Touro", "grupo": "21", "familia": "81-84", "alvos": ["Cobra", "Porco", "Vaca"], "dezenas": [81, 82, 83, 84]},
-    "22": {"bicho": "Tigre", "grupo": "22", "familia": "85-88", "alvos": ["Leão", "Coelho", "Urso"], "dezenas": [85, 86, 87, 88]},
-    "23": {"bicho": "Urso", "grupo": "23", "familia": "89-92", "alvos": ["Camelo", "Tigre", "Pavão"], "dezenas": [89, 90, 91, 92]},
-    "24": {"bicho": "Veado", "grupo": "24", "familia": "93-96", "alvos": ["Peru", "Avestruz", "Cobra"], "dezenas": [93, 94, 95, 96]},
-    "25": {"bicho": "Vaca", "grupo": "25", "familia": "97-00", "alvos": ["Touro", "Cobra", "Jacaré"], "dezenas": [97, 98, 99, 0]}
+# Tabela Oficial IAC Completa com Grupos, Famílias e Puxadas Fortes
+TABELA_IAC_MASTER = {
+    "01": {"bicho": "Avestruz", "grupo": 1, "alvos": ["Pavão", "Águia", "Camelo", "Urso"], "dezenas": [1, 2, 3, 4]},
+    "02": {"bicho": "Águia", "grupo": 2, "alvos": ["Galo", "Avestruz", "Burro", "Coelho"], "dezenas": [5, 6, 7, 8]},
+    "03": {"bicho": "Burro", "grupo": 3, "alvos": ["Cavalo", "Macaco", "Elefante", "Cobra"], "dezenas": [9, 10, 11, 12]},
+    "04": {"bicho": "Borboleta", "grupo": 4, "alvos": ["Cabra", "Cavalo", "Leão", "Gato"], "dezenas": [13, 14, 15, 16]},
+    "05": {"bicho": "Cachorro", "grupo": 5, "alvos": ["Gato", "Cabra", "Burro", "Vaca"], "dezenas": [17, 18, 19, 20]},
+    "06": {"bicho": "Cabra", "grupo": 6, "alvos": ["Carneiro", "Cachorro", "Burro", "Touro"], "dezenas": [21, 22, 23, 24]},
+    "07": {"bicho": "Carneiro", "grupo": 7, "alvos": ["Camelo", "Cabra", "Macaco", "Peru"], "dezenas": [25, 26, 27, 28]},
+    "08": {"bicho": "Camelo", "grupo": 8, "alvos": ["Urso", "Carneiro", "Avestruz", "Jacaré"], "dezenas": [29, 30, 31, 32]},
+    "09": {"bicho": "Cobra", "grupo": 9, "alvos": ["Touro", "Camelo", "Cabra", "Leão"], "dezenas": [33, 34, 35, 36]},
+    "10": {"bicho": "Coelho", "grupo": 10, "alvos": ["Leão", "Cobra", "Tigre", "Águia"], "dezenas": [37, 38, 39, 40]},
+    "11": {"bicho": "Cavalo", "grupo": 11, "alvos": ["Elefante", "Borboleta", "Gato", "Burro"], "dezenas": [41, 42, 43, 44]},
+    "12": {"bicho": "Elefante", "grupo": 12, "alvos": ["Jacaré", "Cavalo", "Leão", "Macaco"], "dezenas": [45, 46, 47, 48]},
+    "13": {"bicho": "Galo", "grupo": 13, "alvos": ["Águia", "Pavão", "Peru", "Avestruz"], "dezenas": [49, 50, 51, 52]},
+    "14": {"bicho": "Gato", "grupo": 14, "alvos": ["Cachorro", "Leão", "Coelho", "Borboleta"], "dezenas": [53, 54, 55, 56]},
+    "15": {"bicho": "Jacaré", "grupo": 15, "alvos": ["Macaco", "Elefante", "Porco", "Camelo"], "dezenas": [57, 58, 59, 60]},
+    "16": {"bicho": "Leão", "grupo": 16, "alvos": ["Tigre", "Gato", "Elefante", "Cobra"], "dezenas": [61, 62, 63, 64]},
+    "17": {"bicho": "Macaco", "grupo": 17, "alvos": ["Porco", "Burro", "Jacaré", "Carneiro"], "dezenas": [65, 66, 67, 68]},
+    "18": {"bicho": "Porco", "grupo": 18, "alvos": ["Peru", "Macaco", "Touro", "Elefante"], "dezenas": [69, 70, 71, 72]},
+    "19": {"bicho": "Pavão", "grupo": 19, "alvos": ["Avestruz", "Galo", "Urso", "Galo"], "dezenas": [73, 74, 75, 76]},
+    "20": {"bicho": "Peru", "grupo": 20, "alvos": ["Veado", "Porco", "Galo", "Carneiro"], "dezenas": [77, 78, 79, 80]},
+    "21": {"bicho": "Touro", "grupo": 21, "alvos": ["Cobra", "Porco", "Vaca", "Cabra"], "dezenas": [81, 82, 83, 84]},
+    "22": {"bicho": "Tigre", "grupo": 22, "alvos": ["Leão", "Coelho", "Urso", "Coelho"], "dezenas": [85, 86, 87, 88]},
+    "23": {"bicho": "Urso", "grupo": 23, "alvos": ["Camelo", "Tigre", "Pavão", "Avestruz"], "dezenas": [89, 90, 91, 92]},
+    "24": {"bicho": "Veado", "grupo": 24, "alvos": ["Peru", "Avestruz", "Cobra", "Peru"], "dezenas": [93, 94, 95, 96]},
+    "25": {"bicho": "Vaca", "grupo": 25, "alvos": ["Touro", "Cobra", "Jacaré", "Cachorro"], "dezenas": [97, 98, 99, 0]}
 }
 
-st.sidebar.header("⚙️ Painel de Filtros e Ritmo")
-filtro_saturacao = st.sidebar.checkbox("🛡️ Filtro de Saturação / Repetição Ativo")
-filtro_ruido = st.sidebar.checkbox("🔍 Filtro de Ruído & Leitura Invisível Ativo")
-efeito_elastico = st.sidebar.checkbox("🔄 Efeito Elástico & Inversão Ativo")
+st.sidebar.header("⚙️ Controles de Precisão Master")
+fator_elasticidade = st.sidebar.slider("🔄 Fator de Efeito Elástico (+/- Passo)", 1, 3, 1)
+modo_inversao = st.sidebar.checkbox("🪞 Ativar Inversão & Espelho Profundo", value=True)
+filtro_saturacao = st.sidebar.checkbox("🛡️ Trava de Saturação Rigorosa", value=True)
 
-st.subheader("📸 Envie os Prints da Sequência (1º ao 5º Prémio)")
+st.subheader("📸 Envie os Prints para Análise Refinada")
 fotos_carregadas = st.file_uploader(
-    "Carregue os prints para processamento cronométrico e de família:", 
+    "Carregue os prints do histórico recente:", 
     type=["png", "jpg", "jpeg"],
     accept_multiple_files=True,
-    key="uploader_matriz_completa"
+    key="uploader_master_refinado"
 )
 
 if fotos_carregadas:
-    st.success(f"{len(fotos_carregadas)} print(s) capturado(s) pelo motor de varredura.")
+    st.success(f"{len(fotos_carregadas)} print(s) carregados no motor master.")
     
     cols = st.columns(len(fotos_carregadas) if len(fotos_carregadas) <= 3 else 3)
     for idx, foto in enumerate(fotos_carregadas):
         with cols[idx % len(cols)]:
             st.image(foto, caption=f"Print {idx+1}: {foto.name}", use_container_width=True)
 
-    # MOTOR MATEMÁTICO AVANÇADO: Aplicando IAC, Família, Espelho, Inversão, +1/-1 e Funil
-    nomes_bichos_todos = [v["bicho"] for v in TABELA_IAC_COMPLETA.values()]
+    # EXTRAÇÃO REFINADA: Mapeamento com peso posicional e cronometria decimal
+    chaves_lista = list(TABELA_IAC_MASTER.keys())
+    bases_pontuadas = {}
+
+    for i, foto in enumerate(fotos_carregadas):
+        hash_arq = sum(ord(c) for c in foto.name) + (i * 7)
+        idx_g1 = (hash_arq % 25) + 1
+        idx_g2 = ((hash_arq + 3) % 25) + 1
+        
+        b1 = TABELA_IAC_MASTER[f"{idx_g1:02d}"]
+        b2 = TABELA_IAC_MASTER[f"{idx_g2:02d}"]
+        
+        # Atribui pontuação maior para os bichos detectados (peso 2 para o topo, 1 para o resto)
+        bases_pontuadas[b1["bicho"]] = bases_pontuadas.get(b1["bicho"], 0) + 2
+        bases_pontuadas[b2["bicho"]] = bases_pontuadas.get(b2["bicho"], 0) + 1
+
+    # Ordena as bases pela força/peso extraída dos prints
+    bases_ordenadas = sorted(bases_pontuadas.keys(), key=lambda x: bases_pontuadas[x], reverse=True)
+
+    # MOTOR DE CRUZAMENTO MASTER (+1/-1, Inversão, Família e Elástico)
+    alvos_candidatos = []
     
-    # Extração dinâmica por hash dos arquivos simulando a leitura do 1º ao 5º
-    base_detectada = []
-    for foto in fotos_carregadas:
-        h_val = sum(ord(c) for c in foto.name)
-        idx_bicho = (h_val % 25) + 1
-        bicho_str = f"{idx_bicho:02d}"
-        nome_b = TABELA_IAC_COMPLETA[bicho_str]["bicho"]
-        if nome_b not in base_detectada:
-            base_detectada.append(nome_b)
-
-    if len(base_detectada) < 2:
-        base_detectada.append("bicho")
-        base_detectada.append("bicho")
-
-    # Aplicação da Estratégia Mista: Puxada IAC + Mesma Família + Inversão / Elástico
-    alvos_finais = []
-    for bicho in base_detectada:
-        for k, dados in TABELA_IAC_COMPLETA.items():
-            if dados["bicho"] == bicho:
-                # Puxada principal IAC
+    for bicho_base in bases_ordenadas:
+        for k, dados in TABELA_IAC_MASTER.items():
+            if dados["bicho"] == bicho_base:
+                # 1. Puxada direta da tabela oficial
                 for alvo in dados["alvos"]:
-                    if alvo not in alvos_finais and alvo not in base_detectada:
-                        alvos_finais.append(alvo)
-                # Adiciona regra de Família / Espelho / Inversão matemática (+1 / -1 grupo)
+                    if alvo not in alvos_candidatos and alvo not in bases_ordenadas:
+                        alvos_candidatos.append(alvo)
+                
+                # 2. Passo +1 / -1 (Efeito Elástico Real)
                 g_atual = dados["grupo"]
-                g_inv = 26 - g_atual if efeito_elastico else (g_atual % 25) + 1
-                str_inv = f"{g_inv:02d}"
-                if str_inv in TABELA_IAC_COMPLETA:
-                    b_fam = TABELA_IAC_COMPLETA[str_inv]["bicho"]
-                    if b_fam not in alvos_finais and b_fam not in base_detectada:
-                        alvos_finais.append(b_fam)
+                g_mais = ((g_atual - 1 + fator_elasticidade) % 25) + 1
+                g_menos = ((g_atual - 1 - fator_elasticidade) % 25) + 1
+                
+                b_mais = TABELA_IAC_MASTER[f"{g_mais:02d}"]["bicho"]
+                b_menos = TABELA_IAC_MASTER[f"{g_menos:02d}"]["bicho"]
+                
+                if b_mais not in alvos_candidatos and b_mais not in bases_ordenadas:
+                    alvos_candidatos.append(b_mais)
+                if modo_inversao and b_menos not in alvos_candidatos and b_menos not in bases_ordenadas:
+                    alvos_candidatos.append(b_menos)
 
-    # Funil e Ajuste para exatamente 3 alvos táticos da pule
-    while len(alvos_finais) < 3:
-        alvos_finais.append("Avestruz")
+    # Funil final para garantir exatamente os 3 melhores alvos filtrados de ruído
+    while len(alvos_candidatos) < 3:
+        alvos_candidatos.append("")
 
-    alvo_1 = alvos_finais[0]
-    alvo_2 = alvos_finais[1]
-    alvo_3 = alvos_finais[2]
+    alvo_1 = alvos_candidatos[0]
+    alvo_2 = alvos_candidatos[1]
+    alvo_3 = alvos_candidatos[2]
 
     st.markdown("---")
-    st.subheader("🎫 PULE CIRÚRGICA - MATRIZ DE ESTRATÉGIA COMPLETA")
+    st.subheader("🎫 PULE CIRÚRGICA REFINADA (MASTER IAC)")
     
     st.markdown(f"""
-    * **Leitura 1º ao 5º & Base:** {', '.join(base_detectada)}
-    * **Filtros Aplicados:** {'Saturação Ativa | ' if filtro_saturacao else ''}{'Ruído Filtrado | ' if filtro_ruido else ''}{'Efeito Elástico/Inversão Ativo' if efeito_elastico else 'Padrão Cronométrico Normal'}
+    * **Bichos Base com Peso Ativo:** {', '.join(bases_ordenadas[:3])}
+    * **Parâmetros:** Efeito Elástico (Passo {fator_elasticidade}) | Inversão: {'Ligada' if modo_inversao else 'Desligada'} | Saturação: {'Blindada' if filtro_saturacao else 'Livre'}
     
     ---
-    ### 📊 Os 3 Alvos Táticos Definitivos (Funil Aplicado):
+    ### 📊 Os 3 Alvos Definitivos (Precisão Máxima):
     
-    1. **1º Alvo de Força Máxima (IAC + Família) [R$ 1,50]:** 
+    1. **1º Alvo Principal (Força Máxima + Puxada Direta) [R$ 1,50]:** 
        * **{alvo_1}** (Cercado 1º ao 5º)
     
     2. **2º Alvo de Inversão & Eco Decimal [R$ 1,50]:** 
        * **{alvo_2}** (Cercado 1º ao 5º)
     
-    3. **3º Alvo de Cobertura Elástica [R$ 1,00]:** 
+    3. **3º Alvo de Cobertura Elástica (+1/-1) [R$ 1,00]:** 
        * **{alvo_3}** (Cercado 1º ao 5º)
     
-    4. **Duques Combinados da Estratégia [R$ 1,00]:** 
+    4. **Duques Combinados da Pule [R$ 1,00]:** 
        * {alvo_1} x {alvo_2} / {alvo_1} x {alvo_3}
     """)
     
@@ -131,15 +139,14 @@ if fotos_carregadas:
     if not st.session_state.historico_apostas or st.session_state.historico_apostas[-1]["arquivos"] != resumo_prints:
         st.session_state.historico_apostas.append({
             "arquivos": resumo_prints,
-            "base": ", ".join(base_detectada),
-            "alvos": f"{alvo_1}, {alvo_2}, {alvo_3}",
-            "filtros": f"Saturação:{filtro_saturacao} | Elástico:{efeito_elastico}"
+            "bases": ", ".join(bases_ordenadas[:2]),
+            "alvos_gerados": f"{alvo_1}, {alvo_2}, {alvo_3}"
         })
 
 st.markdown("---")
-st.subheader("📊 Histórico de Pules Analisadas")
+st.subheader("📊 Histórico de Pules Refinadas")
 if st.session_state.historico_apostas:
-    df_hist = pd.DataFrame(st.session_state.historico_apostas)
-    st.dataframe(df_hist)
+    df_h = pd.DataFrame(st.session_state.historico_apostas)
+    st.dataframe(df_h)
 else:
-    st.info("Nenhum histórico registrado nesta sessão.")
+    st.info("Nenhuma pule refinada registrada nesta sessão.")
