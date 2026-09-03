@@ -1,25 +1,25 @@
 import streamlit as st
 
-def calcular_metodo_bahia(resultados_10h, resultados_12h):
-    # 1. BLOCO DE CORTE ABSOLUTO (Tudo o que já saiu não vai na cabeça principal)
+def calcular_metodo_bahia_corrigido(resultados_10h, resultados_12h):
     historico_proibido = set(resultados_10h + resultados_12h)
     
-    # Extração de referências-chave
-    cabeca_12h = resultados_12h[0]       # Ex: '9459'
-    dezena_cabeca_12h = int(cabeca_12h[2:]) # Ex: 59
+    cabeca_12h = resultados_12h[0]           # Ex: '9459'
+    dezena_cabeca_12h = cabeca_12h[2:]      # Ex: '59'
     
-    elastico_12h = resultados_12h[4]     # 5º prêmio das 12h
+    elastico_12h = resultados_12h[4]         # 5º prêmio das 12h
     
-    # 2. SELEÇÃO DOS 3 BICHOS (O Triângulo Base)
-    bicho_1_dezena = (dezena_cabeca_12h * 3) % 100 # Fator de rotação decimal testado
-    bicho_2_dezena = int(elastico_12h[2:])
-    bicho_3_dezena = int(resultados_10h[0][2:])
+    # Rotação baseada no espelho/inversão e ciclo de soma decimal
+    dezena_invertida = int(dezena_cabeca_12h[::-1])
+    soma_digitos = (int(dezena_cabeca_12h[0]) + int(dezena_cabeca_12h[1])) * 5 % 100
+    
+    bicho_1_dezena = dezena_invertida                # O espelho exato (ex: 59 vira 95)
+    bicho_2_dezena = int(elastico_12h[2:])           # O elástico do 5º prêmio
+    bicho_3_dezena = soma_digitos                    # O resultado do ciclo de soma
     
     dezenas_alvo = [bicho_1_dezena, bicho_2_dezena, bicho_3_dezena]
     palpites_finais = []
     
-    # 3. LAPIDAÇÃO DE MILHAR E CENTENA (Física do Elástico)
-    prefixo_base = int(cabeca_12h[0]) # Dígito inicial da cabeça das 12h
+    prefixo_base = int(cabeca_12h[0]) 
     
     for dez in dezenas_alvo:
         dez_str = f"{dez:02d}"
@@ -38,30 +38,31 @@ def calcular_metodo_bahia(resultados_10h, resultados_12h):
     return palpites_finais
 
 # --- INTERFACE GRÁFICA DO STREAMLIT ---
-st.title("🎯 Robô Analisador - Método Bahia")
-st.write("Insira os resultados dos sorteios para gerar os palpites estruturados.")
+st.title("🎯 Robô Analisador - Método Bahia (Corrigido)")
+st.write("Insira os resultados dos sorteios para gerar os palpites com a nova lógica de rotação e espelho.")
 
 st.subheader("Resultados das 10h (10 prêmios)")
 res_10h_input = st.text_area(
-    "Digite os 10 números das 10h (separados por vírgula ou quebra de linha):",
-    "0404, 0849, 9205, 2618, 6701, 4642, 9645, 3869, 3738, 4358"
+    "Digite os 10 números das 10h (separados por vírgula):",
+    "0404, 0849, 9205, 2618, 6701, 4642, 9645, 3869, 3738, 4358",
+    key="input_10h"
 )
 
 st.subheader("Resultados das 12h (10 prêmios)")
 res_12h_input = st.text_area(
-    "Digite os 10 números das 12h (separados por vírgula ou quebra de linha):",
-    "9459, 6410, 6888, 4923, 0799, 8774, 1846, 6476, 5891, 3382"
+    "Digite os 10 números das 12h (separados por vírgula):",
+    "9459, 6410, 6888, 4923, 0799, 8774, 1846, 6476, 5891, 3382",
+    key="input_12h"
 )
 
-if st.button("Gerar Palpites"):
-    # Limpa e converte os inputs em listas de strings limpas
+if st.button("Gerar Palpites Corrigidos"):
     r10 = [x.strip() for x in res_10h_input.replace("\n", ",").split(",") if x.strip()]
     r12 = [x.strip() for x in res_12h_input.replace("\n", ",").split(",") if x.strip()]
     
     if len(r10) >= 5 and len(r12) >= 5:
-        saida_robo = calcular_metodo_bahia(r10, r12)
+        saida_robo = calcular_metodo_bahia_corrigido(r10, r12)
         
-        st.success("Análise concluída com sucesso!")
+        st.success("Análise recalculada com sucesso!")
         for i, p in enumerate(saida_robo, 1):
             st.markdown(f"**Palpite {i}**")
             st.write(f"• **Dezena:** {p['Dezena']}")
