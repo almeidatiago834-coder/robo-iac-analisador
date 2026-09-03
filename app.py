@@ -4,8 +4,8 @@ import pandas as pd
 # Configuração da Página
 st.set_page_config(page_title="Robô Analisador IAC - Estratégia Oficial", page_icon="🎯", layout="centered")
 
-st.title("🎯 Robô Analisador IAC - Análise Cirúrgica Direta")
-st.markdown("Envie os prints e execute a estratégia pura baseada nas puxadas oficiais IAC.")
+st.title("🎯 Robô Analisador IAC - Análise Cirúrgica Ajustada")
+st.markdown("Envie o print, selecione o bicho que saiu na cabeça e deixe o robô calcular a pule exata.")
 
 # Inicializar Histórico de Apostas
 if 'historico_apostas' not in st.session_state:
@@ -43,80 +43,79 @@ TABELA_FAMILIAS_IAC = {
 st.sidebar.header("⚙️ Painel de Controle IAC")
 forcar_repeticao = st.sidebar.checkbox("🔄 Forçar Repetição (Matriz de Saturação)")
 
-st.subheader("📸 Envie os Prints dos Resultados")
-fotos_carregadas = st.file_uploader(
-    "Carregue os prints para o cruzamento tático:", 
-    type=["png", "jpg", "jpeg"], 
-    accept_multiple_files=True
-)
+st.subheader("📸 1. Envie o Print do Último Resultado")
+foto_carregada = st.file_uploader("Carregue o print:", type=["png", "jpg", "jpeg"])
 
-if fotos_carregadas:
-    st.success(f"{len(fotos_carregadas)} print(s) carregado(s) com sucesso!")
-    cols = st.columns(len(fotos_carregadas) if len(fotos_carregadas) <= 3 else 3)
-    for idx, foto in enumerate(fotos_carregadas):
-        with cols[idx % len(cols)]:
-            st.image(foto, caption=f"Print {idx+1}", use_container_width=True)
+if foto_carregada:
+    st.image(foto_carregada, caption="Print Analisado", use_container_width=True)
 
-# Botão de Execução Direta
-if st.button("🚀 Executar Análise Cirúrgica"):
-    if not fotos_carregadas:
-        st.warning("⚠️ Envie pelo menos um print para realizar o cruzamento estratégico.")
+st.markdown("---")
+st.subheader("🐾 2. Selecione o Bicho que deu na Cabeça (1º Prêmio)")
+lista_bichos = [f"{k} - {v['bicho']}" for k, v in TABELA_FAMILIAS_IAC.items()]
+bicho_selecionado_input = st.selectbox("Escolha o bicho exato do 1º prêmio do print:", lista_bichos)
+
+# Botão de Execução
+if st.button("🚀 Gerar Pule Cirúrgica Corrigida"):
+    # Extrai o grupo selecionado
+    grupo_cabeca = bicho_selecionado_input.split(" - ")[0]
+    bicho_cabeca_info = TABELA_FAMILIAS_IAC[grupo_cabeca]
+    bicho_cabeca_nome = bicho_cabeca_info["bicho"]
+    
+    # Puxada Oficial IAC
+    bicho_alvo_nome = bicho_cabeca_info["alvo"]
+    grupo_alvo = "01"
+    for k, v in TABELA_FAMILIAS_IAC.items():
+        if v["bicho"] == bicho_alvo_nome:
+            grupo_alvo = k
+            break
+            
+    dezena_base = bicho_cabeca_info["dezenas"][0]
+    
+    if forcar_repeticao:
+        status_transicao = "⚠️ Saturação Ativada: Trabalhando na linha de repetição direta."
+        dezena_final = dezena_base
+        milhar_puxada = f"4{bicho_cabeca_info['dezenas'][0]}6"
     else:
-        # Leitura baseada na sequência do print enviado (exemplo tático Grupo 24 - Veado / Alvo Peru)
-        grupo_cabeca = "24" 
-        bicho_cabeca_info = TABELA_FAMILIAS_IAC[grupo_cabeca]
-        bicho_cabeca_nome = bicho_cabeca_info["bicho"]
-        
-        bicho_alvo_nome = bicho_cabeca_info["alvo"]
-        grupo_alvo = "20" # Peru
-        
-        dezena_base = bicho_cabeca_info["dezenas"][0]
-        
-        if forcar_repeticao:
-            status_transicao = "⚠️ Saturação Ativada: Trabalhando na linha de repetição direta."
-            dezena_final = dezena_base
-            milhar_puxada = f"4{bicho_cabeca_info['dezenas'][0]}6"
-        else:
-            status_transicao = "🔒 Blindagem Ativa: Avanço tático de transição aplicado."
-            dezena_trans = (int(dezena_base) + 3) % 100
-            dezena_final = f"{dezena_trans:02d}"
-            milhar_puxada = f"7{dezena_final}2"
+        status_transicao = "🔒 Blindagem Ativa: Avanço tático de transição aplicado."
+        dezena_trans = (int(dezena_base) + 3) % 100
+        dezena_final = f"{dezena_trans:02d}"
+        milhar_puxada = f"7{dezena_final}2"
 
-        st.markdown("---")
-        st.subheader("🎫 PULE CIRÚRGICA IAC (ESTRATÉGIA PURA)")
-        
-        st.markdown(f"""
-        * **Status do Algoritmo:** {status_transicao}
-        * **Cabeça Analisada (Print):** **{bicho_cabeca_nome} (Grupo {grupo_cabeca})**
-        * **Alvo de Puxada Oficial IAC:** **{bicho_alvo_nome} (Grupo {grupo_alvo})**
-        
-        ---
-        ### 📊 Distribuição Tática da Pule Cirúrgica (R$ 5,00):
-        
-        1. **Cabeça Seca (1º Prêmio) [R$ 1,00]:** 
-           * Grupo {grupo_cabeca} ({bicho_cabeca_nome})
-        
-        2. **Cercado Parcial (1º ao 3º) [R$ 1,00]:** 
-           * Grupo {grupo_cabeca} ({bicho_cabeca_nome})
-        
-        3. **Cercado Amplo (1º ao 5º) [R$ 1,00]:** 
-           * Grupo de Puxada Alvo: **{bicho_alvo_nome}**
-        
-        4. **Dezenas de Alta Precisão [R$ 0,60]:** 
-           * Dezenas do bloco principal e dezena **{dezena_final}**
-        
-        5. **Duques Combinados [R$ 0,60]:** 
-           * {bicho_cabeca_nome} x {bicho_alvo_nome}
-        
-        6. **Centena e Milhar Cirúrgica [R$ 0,80]:** 
-           * Milhar Principal: **{milhar_puxada}**
-        """)
-        
-        st.session_state.historico_apostas.append({
-            "bicho_cabeca": bicho_cabeca_nome,
-            "alvo": bicho_alvo_nome,
-            "status": "Repetido" if forcar_repeticao else "Transição"
-        })
+    st.markdown("---")
+    st.subheader("🎫 PULE CIRÚRGICA IAC (ESTRATÉGIA CORRIGIDA)")
+    
+    st.markdown(f"""
+    * **Status do Algoritmo:** {status_transicao}
+    * **Cabeça Informada:** **{bicho_cabeca_nome} (Grupo {grupo_cabeca})**
+    * **Alvo de Puxada Oficial IAC:** **{bicho_alvo_nome} (Grupo {grupo_alvo})**
+    
+    ---
+    ### 📊 Distribuição Tática da Pule Cirúrgica (R$ 5,00):
+    
+    1. **Cabeça Seca (1º Prêmio) [R$ 1,00]:** 
+       * Grupo {grupo_cabeca} ({bicho_cabeca_nome})
+    
+    2. **Cercado Parcial (1º ao 3º) [R$ 1,00]:** 
+       * Grupo {grupo_cabeca} ({bicho_cabeca_nome})
+    
+    3. **Cercado Amplo (1º ao 5º) [R$ 1,00]:** 
+       * Grupo de Puxada Alvo: **{bicho_alvo_nome}**
+    
+    4. **Dezenas de Alta Precisão [R$ 0,60]:** 
+       * Dezenas do bloco principal e dezena **{dezena_final}**
+    
+    5. **Duques Combinados [R$ 0,60]:** 
+       * {bicho_cabeca_nome} x {bicho_alvo_nome}
+    
+    6. **Centena e Milhar Cirúrgica [R$ 0,80]:** 
+       * Milhar Principal: **{milhar_puxada}**
+    """)
+    
+    st.session_state.historico_apostas.append({
+        "bicho_cabeca": bicho_cabeca_nome,
+        "alvo": bicho_alvo_nome,
+        "status": "Repetido" if forcar_repeticao else "Transição"
+    })
 
 st.markdown("---")
 st.subheader("📊 Histórico de Pules Executadas")
