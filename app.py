@@ -2,10 +2,10 @@ import streamlit as st
 import pandas as pd
 
 # Configuração da Página
-st.set_page_config(page_title="Robô Analisador IAC - Estratégia Blindada", page_icon="🎯", layout="centered")
+st.set_page_config(page_title="Robô Analisador IAC - Tiro das 15h", page_icon="🎯", layout="centered")
 
-st.title("🎯 Robô Analisador IAC - Motor de Cruzamento Blindado")
-st.markdown("Exclusão absoluta dos sorteados: o robô só traz bichos novos puxados pela matriz.")
+st.title("🎯 Robô Analisador IAC - Cruzamento Dois Horários (Tiro 15h)")
+st.markdown("Cruzamento avançado: Penúltimo Horário + Último Horário para fechar o tiro das 15h.")
 
 # Inicializar Histórico
 if 'historico_apostas' not in st.session_state:
@@ -42,33 +42,50 @@ TABELA_IAC_COMPLETA = {
 
 lista_bichos = sorted(list(TABELA_IAC_COMPLETA.keys()))
 
-st.subheader("📝 Digitação dos Resultados Reais (1º ao 5º Prémio)")
-
+st.subheader("⏱️ Passo 1: Penúltimo Horário (1º ao 5º Prémio)")
 col1, col2 = st.columns(2)
 with col1:
-    b1 = st.selectbox("1º Prémio (Cabeça):", lista_bichos, index=23)
-    b2 = st.selectbox("2º Prémio:", lista_bichos, index=0)
-    b3 = st.selectbox("3º Prémio:", lista_bichos, index=1)
+    p1_cabeca = st.selectbox("1º Prémio (Penúltimo):", lista_bichos, index=0, key="p1_c")
+    p1_p2 = st.selectbox("2º Prémio (Penúltimo):", lista_bichos, index=1, key="p1_2")
+    p1_p3 = st.selectbox("3º Prémio (Penúltimo):", lista_bichos, index=2, key="p1_3")
 with col2:
-    b4 = st.selectbox("4º Prémio:", lista_bichos, index=14)
-    b5 = st.selectbox("5º Prémio (Elástico):", lista_bichos, index=12)
+    p1_p4 = st.selectbox("4º Prémio (Penúltimo):", lista_bichos, index=3, key="p1_4")
+    p1_p5 = st.selectbox("5º Prémio (Penúltimo):", lista_bichos, index=4, key="p1_5")
 
-if st.button("🚀 Processar Estratégia com Exclusão Absoluta"):
-    # Lista de tudo o que saiu no sorteio (para NUNCA aparecer como palpite)
-    bichos_sorteados = [b1, b2, b3, b4, b5]
+st.markdown("---")
+st.subheader("⏱️ Passo 2: Último Horário / Atual (1º ao 5º Prémio)")
+col3, col4 = st.columns(2)
+with col3:
+    u1_cabeca = st.selectbox("1º Prémio (Último/Cabeça):", lista_bichos, index=10, key="u1_c")
+    u1_p2 = st.selectbox("2º Prémio (Último):", lista_bichos, index=5, key="u1_2")
+    u1_p3 = st.selectbox("3º Prémio (Último):", lista_bichos, index=6, key="u1_3")
+with col4:
+    u1_p4 = st.selectbox("4º Prémio (Último):", lista_bichos, index=7, key="u1_4")
+    u1_p5 = st.selectbox("5º Prémio (Último/Elástico):", lista_bichos, index=12, key="u1_5")
+
+if st.button("🚀 Processar Tiro Certeiro para as 15h"):
+    # Consolida todos os 10 bichos que saíram nos dois horários para blindagem total
+    penultimo_sorteio = [p1_cabeca, p1_p2, p1_p3, p1_p4, p1_p5]
+    ultimo_sorteio = [u1_cabeca, u1_p2, u1_p3, u1_p4, u1_p5]
+    todos_sorteados = penultimo_sorteio + ultimo_sorteio
     
     candidatos_pontuados = {}
     
-    for idx, bicho in enumerate(bichos_sorteados):
-        peso = 3 if idx == 0 else (2 if idx == 4 else 1)
-        alvos_puxada = TABELA_IAC_COMPLETA[bicho]["alvos"]
-        
-        for alvo in alvos_puxada:
-            # BLOQUEIO RIGOROSO: Só pontua se o alvo NÃO estiver entre os 5 prêmios sorteados
-            if alvo not in bichos_sorteados:
+    # Processa o penúltimo horário (peso menor de histórico)
+    for idx, bicho in enumerate(penultimo_sorteio):
+        peso = 2 if idx == 0 else 1
+        for alvo in TABELA_IAC_COMPLETA[bicho]["alvos"]:
+            if alvo not in todos_sorteados:
                 candidatos_pontuados[alvo] = candidatos_pontuados.get(alvo, 0) + peso
 
-    # Ordena os candidatos limpos (que não saíram no print)
+    # Processa o último horário (peso máximo na cabeça e no 5º prêmio por ser transição direta)
+    for idx, bicho in enumerate(ultimo_sorteio):
+        peso = 4 if idx == 0 else (3 if idx == 4 else 2)
+        for alvo in TABELA_IAC_COMPLETA[bicho]["alvos"]:
+            if alvo not in todos_sorteados:
+                candidatos_pontuados[alvo] = candidatos_pontuados.get(alvo, 0) + peso
+
+    # Ordena os melhores alvos cruzados
     alvos_ordenados = sorted(candidatos_pontuados.keys(), key=lambda x: candidatos_pontuados[x], reverse=True)
 
     while len(alvos_ordenados) < 3:
@@ -83,21 +100,21 @@ if st.button("🚀 Processar Estratégia com Exclusão Absoluta"):
     d_3 = TABELA_IAC_COMPLETA[alvo_3]
 
     st.markdown("---")
-    st.subheader("🎫 PULE CIRÚRGICA 100% LIMPA")
+    st.subheader("🎫 PULE DE OURO — TIRO CERTEIRO DAS 15H")
     
     st.markdown(f"""
-    * **Sorteio Base (Bloqueados):** {', '.join(bichos_sorteados)}
+    * **Base Cruzada (10 Prêmios Bloqueados):** Analisado o fluxo do penúltimo e último horários.
     
     ---
-    ### 📊 Alvos Exclusivos para o Próximo Horário:
+    ### 📊 Os 3 Alvos Definitivos para as 15h:
     
-    1. **1º Alvo Principal [R$ 1,50]:**
+    1. **1º Alvo Principal (Máxima Convergência de Fluxo) [R$ 1,50]:**
        * **{alvo_1}** (Grupo {d_1['grupo']:02d}) | Dezenas: `{', '.join(d_1['dezenas'])}`
     
-    2. **2º Alvo de Inversão [R$ 1,50]:**
+    2. **2º Alvo de Transição & Inversão [R$ 1,50]:**
        * **{alvo_2}** (Grupo {d_2['grupo']:02d}) | Dezenas: `{', '.join(d_2['dezenas'])}`
     
-    3. **3º Alvo Elástico [R$ 1,00]:**
+    3. **3º Alvo Elástico de Fechamento [R$ 1,00]:**
        * **{alvo_3}** (Grupo {d_3['grupo']:02d}) | Dezenas: `{', '.join(d_3['dezenas'])}`
     
     4. **Duques e Terno Combinados:**
@@ -105,11 +122,11 @@ if st.button("🚀 Processar Estratégia com Exclusão Absoluta"):
     """)
 
     st.session_state.historico_apostas.append({
-        "base": f"{b1} até {b5}",
-        "alvos_limpos": f"{alvo_1}, {alvo_2}, {alvo_3}"
+        "horario_alvo": "15:00",
+        "alvos_15h": f"{alvo_1}, {alvo_2}, {alvo_3}"
     })
 
 st.markdown("---")
-st.subheader("📊 Histórico")
+st.subheader("📊 Histórico de Tiros")
 if st.session_state.historico_apostas:
     st.dataframe(pd.DataFrame(st.session_state.historico_apostas))
