@@ -1,12 +1,12 @@
 import streamlit as st
 import pandas as pd
-import datetime
+from datetime import datetime, timedelta, timezone
 
 # Configuração da Página
 st.set_page_config(page_title="Robô Analisador IAC - Estratégia Oficial", page_icon="🎯", layout="centered")
 
 st.title("🎯 Robô Analisador IAC - Estratégia Cirúrgica")
-st.markdown("Envie os prints. O robô atualiza a Cruz do Dia em tempo real e aplica o cruzamento oficial de puxadas IAC.")
+st.markdown("Envie os prints. O robô calcula a Cruz do Dia com base na data real de hoje e aplica o cruzamento oficial IAC.")
 
 # Inicializar Histórico de Apostas
 if 'historico_apostas' not in st.session_state:
@@ -41,20 +41,21 @@ TABELA_FAMILIAS_IAC = {
     "25": {"bicho": "Vaca", "grupo": "25", "alvo": "Touro", "dezenas": ["97", "98", "99", "00"]}
 }
 
-# Função corrigida para calcular a Cruz do Dia dinamicamente em tempo real
+# Função com fuso horário forçado para o Horário do Brasil (GMT-3)
 def calcular_cruz_do_dia():
-    hoje = datetime.datetime.now()
-    string_data = hoje.strftime("%d%m%Y") # DDMMYYYY atual do servidor/sistema
+    # Define o fuso horário do Brasil (-3 horas de UTC)
+    fuso_brasil = timezone(timedelta(hours=-3))
+    agora_brasil = datetime.now(fuso_brasil)
     
-    # Cálculo tradicional da cruz do dia com base na data corrente
+    string_data = agora_brasil.strftime("%d%m%Y") # DDMMYYYY correto no Brasil
+    
+    # Cálculo da cruz do dia com base na data do Brasil
     soma_digitos = sum(int(d) for d in string_data)
     segunda_soma = sum(int(d) for d in str(soma_digitos))
     
-    # Formação da matriz de dígitos da cruz
     digitos_cruz = list(string_data) + list(str(soma_digitos)) + list(str(segunda_soma))
     digitos_unicos = [d for d in digitos_cruz if d != '0']
     
-    # Pega os 4 principais elementos gerados pela data de hoje
     cruz_gerada = []
     for d in digitos_unicos:
         if d not in cruz_gerada:
@@ -63,14 +64,14 @@ def calcular_cruz_do_dia():
             break
             
     if len(cruz_gerada) < 4:
-        cruz_gerada = ["1", "4", "7", "9"] # Fallback seguro
+        cruz_gerada = ["1", "4", "7", "9"]
         
     return cruz_gerada, string_data
 
 cruz_base, data_str = calcular_cruz_do_dia()
 
 st.sidebar.header("⚙️ Painel de Controle IAC")
-st.sidebar.markdown(f"**Data Atual:** {data_str[:2]}/{data_str[2:4]}/{data_str[4:]}")
+st.sidebar.markdown(f"**Data Atual (Brasil):** {data_str[:2]}/{data_str[2:4]}/{data_str[4:]}")
 st.sidebar.markdown(f"**Cruz do Dia Dinâmica:** `{' '.join(cruz_base)}`")
 
 forcar_repeticao = st.sidebar.checkbox("🔄 Forçar Repetição (Matriz de Saturação)")
@@ -94,25 +95,19 @@ if st.button("🚀 Executar Análise Cirúrgica IAC"):
     if not fotos_carregadas:
         st.warning("⚠️ Envie pelo menos um print para o robô cruzar os dados com a tabela.")
     else:
-        # Pega a última referência enviada (ex: 12h Bahia com o Veado no 1º prêmio do seu print)
         ultima_foto = fotos_carregadas[-1]
         
-        # Mapeamento tático baseado estritamente na última cabeça identificada
-        # (Se for o print do Veado, Grupo 24; se for outro, o robô faz a varredura na tabela)
         grupo_cabeca = "24" # Veado (conforme o seu print de exemplo anterior)
         bicho_cabeca_info = TABELA_FAMILIAS_IAC[grupo_cabeca]
         bicho_cabeca_nome = bicho_cabeca_info["bicho"]
         
-        # Puxada Oficial (Alvo Direto da Tabela IAC)
         bicho_alvo_nome = bicho_cabeca_info["alvo"]
         grupo_alvo = "20" # Peru (Alvo oficial do Veado na tabela IAC)
         
-        # Segundo Apoio derivado da Cruz do Dia Dinâmica
         digito_cruz_int = int(cruz_base[0])
         grupo_cruz_num = f"{((digito_cruz_int - 1) % 25) + 1:02d}"
         bicho_cruz_nome = TABELA_FAMILIAS_IAC[grupo_cruz_num]["bicho"]
 
-        # Dezenas e Milhares Cirúrgicas baseadas na estratégia pura
         dezena_base = bicho_cabeca_info["dezenas"][0]
         
         if forcar_repeticao:
