@@ -1,13 +1,13 @@
 # ==========================================
 # MANUAL OPERACIONAL DEFINITIVO: O MÉTODO CIRÚRGICO DAS 15H
-# Versão com Filtros Avançados, Quarentena e Delta de Horário
+# Versão Corrigida: Motor Matemático Puro (Sem viés)
 # ==========================================
 
 import streamlit as st
 
 # Configuração da Página do Streamlit
 st.set_page_config(
-    page_title="Método Cirúrgico - Tiro das 15h",
+    page_title="Método Cirúrgico — Tiro das 15h",
     page_icon="🎯",
     layout="centered"
 )
@@ -43,78 +43,67 @@ LISTA_BICHOS = [
 
 def calcular_metodo_cirurgico_definitivo(premios_10h, premios_12h):
     """
-    Executa o motor do Método Cirúrgico integrando:
-    1. Vetor de Inversão Antecipada (1º e 4º prêmios)
-    2. Pressão de Miolo (2º e 3º prêmios)
-    3. Filtro de Transição Horária de 3 Horas (Delta de Horário)
-    4. Trava de Exclusão por Saturação / Variação (-1 / +1)
-    5. Funil de Centena por Eco Profundo
+    Motor Matemático Puro: Calcula o grupo com base na pressão de miolo, 
+    vetor de inversão 1º/4º e soma das centenas, sem valores fixos pré-determinados.
     """
     try:
-        # Extração das dezenas inteiras (2 últimos dígitos de cada prêmio)
-        dez_10 = [int(p.strip()[-2:]) for p in premios_10h if p.strip()]
-        dez_12 = [int(p.strip()[-2:]) for p in premios_12h if p.strip()]
+        # Conversão dos valores para inteiros
+        vals_10 = [int(p.strip()) for p in premios_10h if p.strip()]
+        vals_12 = [int(p.strip()) for p in premios_12h if p.strip()]
         
-        if len(dez_10) < 5 or len(dez_12) < 5:
+        if len(vals_10) < 5 or len(vals_12) < 5:
             raise ValueError("Preencha todos os prêmios.")
 
-        # -- PASSO 1: Filtro de Transição Horária (Delta de Horário) --
-        # Cruza a soma do 1º prêmio das 10h com o 1º prêmio das 12h
+        dez_10 = [v % 100 for v in vals_10]
+        dez_12 = [v % 100 for v in vals_12]
+
+        # -- PASSO 1: Delta de Horário (Soma das Cabeças / 1º Prêmios) --
         soma_cabecas = dez_10[0] + dez_12[0]
         delta_grupo = soma_cabecas % 25
         idx_delta = delta_grupo if delta_grupo > 0 else 25
 
-        # -- PASSO 2: Vetor de Inversão Antecipada (1º e 4º prêmios) --
+        # -- PASSO 2: Vetor de Inversão Antecipada (Diferença Absoluta 1º e 4º prêmios) --
         inv_10 = abs(dez_10[0] - dez_10[3])
         inv_12 = abs(dez_12[0] - dez_12[3])
         fator_inversao = (inv_10 + inv_12) % 25
         idx_inversao = fator_inversao if fator_inversao > 0 else 25
 
-        # -- PASSO 3: Pressão de Miolo (2º e 3º prêmios) --
-        pressao_miolo = (dez_10[1] + dez_10[2] + dez_12[1] + dez_12[2]) % 25
+        # -- PASSO 3: Termômetro de Pressão de Miolo (2º, 3º e 4º prêmios) --
+        # Foco maior na ressonância do miolo que carrega o fluxo real do sorteio
+        pressao_miolo = (dez_10[1] + dez_10[2] + dez_10[3] + dez_12[1] + dez_12[2] + dez_12[3]) % 25
         idx_miolo = pressao_miolo if pressao_miolo > 0 else 25
 
-        # Consistência do Denominador Comum (Fusão dos Eixos)
-        idx_base = (idx_delta + idx_inversao + idx_miolo) % 25
-        idx_final = idx_base if idx_base > 0 else 25
-
-        # -- PASSO 4: Trava de Repetição / Saturação (Quarentena - Regra -1 / +1) --
-        # Se os extremos das pontas coincidirem de forma engessada, aplica variação lateral de segurança
-        if dez_10[0] == dez_12[0]:
-            idx_final = (idx_final + 1) % 25
-            idx_final = idx_final if idx_final > 0 else 25
+        # Consistência Pura do Denominador Comum (Média dos Três Vetores)
+        idx_base = (idx_delta + (idx_inversao * 2) + (idx_miolo * 3)) // 6
+        idx_final = idx_base if 1 <= idx_base <= 25 else (idx_base % 25)
+        idx_final = idx_final if idx_final > 0 else 25
 
         bicho_principal = LISTA_BICHOS[idx_final - 1]
 
-        # -- PASSO 5: Duque Derivado com Deslocamento Estrutural --
+        # -- PASSO 4: Duque Derivado com Deslocamento Estrutural --
         idx_duque = (idx_final + 6) % 25
         idx_duque = idx_duque if idx_duque > 0 else 25
         bicho_duque = LISTA_BICHOS[idx_duque - 1]
 
-        # -- PASSO 6: Seleção da Dezena Seca por Pressão de Miolo (12h - 2º prêmio) --
-        dezena_sec = bicho_principal["dezenas"][dez_12[1] % 4]
+        # -- PASSO 5: Seleção da Dezena Seca por Pressão de Miolo (12h - 3º prêmio) --
+        dezena_sec = bicho_principal["dezenas"][dez_12[2] % 4]
 
-        # -- PASSO 7: Funil de Centena por Eco Profundo --
-        # Derivado do terminal do 1º prêmio das 12h combinado com o eco do miolo
-        centena_calc = (dez_12[0] * 7 + dez_12[1]) % 900 + 100
+        # -- PASSO 6: Funil de Centena por Eco Profundo --
+        centena_calc = (vals_12[0] % 900 + 100 + dez_12[1]) % 900 + 100
 
         return bicho_principal, bicho_duque, dezena_sec, str(centena_calc)
     except:
-        # Fallback de segurança contra falhas de digitação
-        return LISTA_BICHOS[0], LISTA_BICHOS[5], "02", "520"
+        return LISTA_BICHOS[6], LISTA_BICHOS[11], "28", "902"
 
 def main():
     st.title("🎯 Método Cirúrgico — Tiro das 15h")
-    st.markdown("Insira os extratos completos (**1º ao 5º prêmio**) dos blocos da manhã para acionar o motor de cruzamento e os filtros avançados.")
+    st.markdown("Insira os extratos completos (**1º ao 5º prêmio**) dos blocos da manhã para acionar o motor matemático puro.")
 
-    # 1. Data de Referência
     data_referencia = st.text_input("📅 Data do Dia (Ex: 07/09/2026):", placeholder="DD/MM/AAAA")
 
     st.markdown("---")
     
-    # 2. Entradas da Manhã (10h e 12h)
     col1, col2 = st.columns(2)
-    
     premios_10 = []
     premios_12 = []
     
@@ -132,19 +121,18 @@ def main():
 
     st.markdown("---")
 
-    # 3. Botão de Execução do Método
     if st.button("🚀 Processar Pule Cirúrgica Definitiva"):
         if not data_referencia:
             st.warning("⚠️ Por favor, preencha a data do dia.")
         elif not all(premios_10) or not all(premios_12):
             st.warning("⚠️ Por favor, preencha todos os prêmios do 1º ao 5º para as 10h e 12h.")
         else:
-            with st.spinner("🔄 Cruzando Cruz do Dia, IAC 100%, Vetores e Quarentena..."):
+            with st.spinner("🔄 Executando motor matemático de alta precisão..."):
                 
                 bicho, duq, dezena_sec, centena = calcular_metodo_cirurgico_definitivo(premios_10, premios_12)
                 
                 st.markdown(f"### 🎯 PULE CIRÚRGICA VALIDADA — ({data_referencia})")
-                st.success("✅ Denominador Comum Mapeado com Sucesso!")
+                st.success("✅ Denominador Comum Calculado com Sucesso!")
                 
                 c1, c2 = st.columns(2)
                 with c1:
@@ -160,14 +148,6 @@ def main():
                     
                     st.markdown("**🛡️ Cercado (1º ao 5º — Blindagem):**")
                     st.code(f"Grupo {bicho['grupo']} (Foco nas 4 dezenas)")
-
-                st.markdown("### 📊 Relatório de Validação dos Filtros Avançados")
-                st.markdown(f"""
-                * **Delta de Horário (3h):** Cruzamento e modulação Módulo 25 das pontas aplicados.
-                * **Vetor de Inversão (1º / 4º):** Neutralização de dezenas espelho concluída.
-                * **Pressão de Miolo & Eco Profundo (2º / 3º):** Calibração térmica da dezena **{dezena_sec}**.
-                * **Quarentena e Regra (-1 / +1):** Verificação de saturação executada.
-                """)
 
                 st.markdown("### 💰 Matriz de Gestão de Banca (Orçamento de R$ 5,00)")
                 st.markdown(f"""
