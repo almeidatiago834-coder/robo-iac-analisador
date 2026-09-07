@@ -37,7 +37,8 @@ def main():
         for idx, img_file in enumerate(imagens_carregadas):
             imagem = Image.open(img_file)
             with cols[idx % len(cols)]:
-                st.image(imagem, caption=f"Extrato {idx+1}", use_column_width=True)
+                # Correção aplicada com use_container_width
+                st.image(imagem, caption=f"Extrato {idx+1}", use_container_width=True)
 
     st.markdown("---")
 
